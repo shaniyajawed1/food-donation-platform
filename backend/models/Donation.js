@@ -7,7 +7,7 @@ const donationSchema = new mongoose.Schema({
   expiryDate: { type: Date, required: true },
   pickupLocation: { type: String, required: true },
   allergens: String,
-  images: [String], // For multiple images
+  images: [String], 
   status: { 
     type: String, 
     enum: ['available', 'reserved', 'completed', 'cancelled'], 

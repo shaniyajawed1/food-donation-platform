@@ -14,10 +14,10 @@ const FoodListings = () => {
   const loadDonations = async () => {
     try {
       const response = await donationAPI.getAll();
-      setDonations(response.data || []); // ✅ Ensure it's always an array
+      setDonations(response.data || []); 
     } catch (error) {
       console.error('Error loading donations:', error);
-      setDonations([]); // ✅ Set empty array on error
+      setDonations([]); 
     } finally {
       setLoading(false);
     }
@@ -25,7 +25,6 @@ const FoodListings = () => {
 
   const handleRequest = async (donationId) => {
     try {
-      // ✅ Check if user is available
       if (!user || !user.id) {
         alert('Please login to request food');
         return;
@@ -38,14 +37,14 @@ const FoodListings = () => {
       };
       
       await requestAPI.create(requestData);
-      alert('🎉 Food request sent successfully! The donor will review your request.');
+      alert('Food request sent successfully! The donor will review your request.');
       
-      // Refresh donations
+      
       loadDonations();
       
     } catch (error) {
       console.error('Request error:', error);
-      alert('❌ Error sending request: ' + (error.response?.data?.message || error.message));
+      alert('Error sending request: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -82,9 +81,9 @@ const FoodListings = () => {
               <p className="text-gray-600 mb-3">{donation.description}</p>
               
               <div className="space-y-2 text-sm text-gray-500 mb-4">
-                <div>📍 {donation.pickupLocation}</div>
-                <div>👤 Anonymous Donor</div>
-                <div>📅 Expires: {new Date(donation.expiryDate).toLocaleDateString()}</div>
+                <div>{donation.pickupLocation}</div>
+                <div>Anonymous Donor</div>
+                <div>Expires: {new Date(donation.expiryDate).toLocaleDateString()}</div>
                 {donation.allergens && (
                   <div>⚠️ {donation.allergens}</div>
                 )}

@@ -15,27 +15,24 @@ export default function DonationHistory() {
 
   const loadDonations = async () => {
     try {
-      console.log('👤 Loading donations for user:', user.id);
-      
-      // ✅ DIRECT my-donations route use karo (auth middleware ke saath)
+      console.log('Loading donations for user:', user.id);
       const response = await donationAPI.getMyDonations();
-      console.log('📦 My Donations Response:', response.data);
+      console.log('My Donations Response:', response.data);
       
       setDonations(response.data);
       
     } catch (error) {
-      console.error('❌ Error loading donations:', error);
-      // Fallback: Available donations try karo
+      console.error('Error loading donations:', error);
       try {
-        console.log('🔄 Trying available donations as fallback...');
+        console.log('Trying available donations as fallback...');
         const allResponse = await donationAPI.getAll();
         const myDonations = allResponse.data.filter(donation => 
           donation.donor && donation.donor._id === user.id
         );
-        console.log('📦 Fallback My Donations:', myDonations);
+        console.log('Fallback My Donations:', myDonations);
         setDonations(myDonations);
       } catch (fallbackError) {
-        console.error('❌ Fallback also failed:', fallbackError);
+        console.error('Fallback also failed:', fallbackError);
       }
     } finally {
       setLoading(false);

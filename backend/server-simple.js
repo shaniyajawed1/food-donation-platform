@@ -6,7 +6,6 @@ const socketIo = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-
 const io = socketIo(server, {
   cors: {
     origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -15,31 +14,22 @@ const io = socketIo(server, {
     allowedHeaders: ["Content-Type", "Authorization"]
   }
 });
-
-// ✅ COMPREHENSIVE CORS Configuration - MUST be FIRST
 app.use(cors({
   origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   exposedHeaders: ["Content-Range", "X-Content-Range"],
-  maxAge: 600 // Cache preflight for 10 minutes
+  maxAge: 600
 }));
 
-// ✅ Handle preflight requests
 app.options('*', cors());
-
-// ✅ Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ✅ Request logging middleware
 app.use((req, res, next) => {
-  console.log(`📨 ${req.method} ${req.path}`);
+  console.log(`${req.method} ${req.path}`);
   next();
 });
-
-// In-memory database
 let users = [];
 let donations = [];
 let requests = [];
@@ -47,20 +37,17 @@ let nextId = 1;
 
 // Socket.io
 io.on("connection", (socket) => {
-  console.log("✅ User connected:", socket.id);
+  console.log("User connected:", socket.id);
   socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id);
+    console.log("User disconnected:", socket.id);
   });
 });
-
-// ===== AUTHENTICATION ROUTES =====
 app.post("/api/auth/register", (req, res) => {
   try {
-    console.log("📝 Registration attempt:", req.body);
+    console.log("Registration attempt:", req.body);
     
     const { name, email, password, userType, phone } = req.body;
     
-    // Validate required fields
     if (!name || !email || !password || !userType) {
       return res.status(400).json({ 
         message: "All fields are required",
@@ -68,7 +55,6 @@ app.post("/api/auth/register", (req, res) => {
       });
     }
     
-    // Check if user exists
     const existingUser = users.find(u => u.email === email);
     if (existingUser) {
       return res.status(400).json({ 
@@ -77,24 +63,23 @@ app.post("/api/auth/register", (req, res) => {
       });
     }
     
-    // Create new user
+    const userId = nextId++;
     const user = {
-      id: nextId++,
+      id: userId,
+      _id: userId, 
       name,
       email,
-      password, // In production, hash this!
+      password,
       userType,
       phone: phone || "",
       createdAt: new Date().toISOString()
     };
     
     users.push(user);
-    console.log("✅ User registered successfully:", user.email);
-    
-    // Return format matching frontend expectations
+    console.log("User registered successfully:", user.email);
     res.status(201).json({
       message: "User registered successfully",
-      token: "dummy-token-" + user.id,
+      token: "dummy-token-" + userId,
       user: {
         id: user.id,
         _id: user.id,
@@ -105,7 +90,7 @@ app.post("/api/auth/register", (req, res) => {
       }
     });
   } catch (error) {
-    console.error("❌ Registration error:", error);
+    console.error("Registration error:", error);
     res.status(500).json({ 
       message: "Server error during registration",
       error: error.message 
@@ -115,11 +100,10 @@ app.post("/api/auth/register", (req, res) => {
 
 app.post("/api/auth/login", (req, res) => {
   try {
-    console.log("🔐 Login attempt:", req.body.email);
+    console.log("Login attempt:", req.body.email);
     
     const { email, password } = req.body;
     
-    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({ 
         message: "Email and password are required",
@@ -135,9 +119,7 @@ app.post("/api/auth/login", (req, res) => {
       });
     }
     
-    console.log("✅ Login successful:", user.email);
-    
-    // Return format matching frontend expectations
+    console.log("Login successful:", user.email);
     res.json({
       message: "Login successful",
       token: "dummy-token-" + user.id,
@@ -151,40 +133,39 @@ app.post("/api/auth/login", (req, res) => {
       }
     });
   } catch (error) {
-    console.error("❌ Login error:", error);
+    console.error("Login error:", error);
     res.status(500).json({ 
       message: "Server error during login",
       error: error.message 
     });
   }
 });
-
-// ===== DONATION ROUTES =====
 app.get("/api/donations", (req, res) => {
-  console.log("📦 Fetching all donations");
+  console.log("Fetching all donations");
   const availableDonations = donations.filter(d => d.status === "available");
   res.json(availableDonations);
 });
 
 app.post("/api/donations", (req, res) => {
   try {
-    console.log("🆕 Creating new donation:", req.body);
+    console.log("Creating new donation:", req.body);
     
+    const donationId = nextId++;
     const donation = {
-      id: nextId++,
-      _id: nextId,
+      id: donationId,
+      _id: donationId,
       ...req.body,
       status: "available",
       createdAt: new Date().toISOString()
     };
     
     donations.push(donation);
-    console.log("✅ Donation created successfully:", donation.id);
+    console.log("Donation created successfully:", donation.id);
     
     io.emit("newDonation", donation);
     res.status(201).json(donation);
   } catch (error) {
-    console.error("❌ Error creating donation:", error);
+    console.error("Error creating donation:", error);
     res.status(500).json({ 
       message: "Server error creating donation",
       error: error.message 
@@ -192,33 +173,79 @@ app.post("/api/donations", (req, res) => {
   }
 });
 
+app.get("/api/donations/my-donations", (req, res) => {
+  try {
+    const authHeader = req.header('Authorization');
+    console.log("Auth header:", authHeader);
+    const userId = authHeader ? authHeader.replace('Bearer dummy-token-', '') : null;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    console.log("Fetching donations for user:", userId);
+    const userDonations = donations.filter(d => d.donorId == userId);
+    console.log("Found donations:", userDonations.length);
+    res.json(userDonations);
+  } catch (error) {
+    console.error("Error fetching my donations:", error);
+    res.status(500).json({ 
+      message: "Server error",
+      error: error.message 
+    });
+  }
+});
+
 app.get("/api/users/:userId/donations", (req, res) => {
-  console.log("🔍 Fetching donations for user:", req.params.userId);
+  console.log("Fetching donations for user:", req.params.userId);
   const userDonations = donations.filter(d => d.donorId == req.params.userId);
-  console.log("📊 Found donations:", userDonations.length);
+  console.log("Found donations:", userDonations.length);
   res.json(userDonations);
 });
 
-// ===== REQUEST ROUTES =====
+app.patch("/api/donations/:id/status", (req, res) => {
+  try {
+    const donationId = req.params.id;
+    const { status } = req.body;
+    
+    const donation = donations.find(d => d.id == donationId || d._id == donationId);
+    if (!donation) {
+      return res.status(404).json({ message: "Donation not found" });
+    }
+    
+    donation.status = status;
+    console.log("Donation status updated:", donationId, "->", status);
+    
+    res.json(donation);
+  } catch (error) {
+    console.error("Error updating donation:", error);
+    res.status(500).json({ 
+      message: "Server error",
+      error: error.message 
+    });
+  }
+});
+
 app.post("/api/requests", (req, res) => {
   try {
-    console.log("📬 Creating new request:", req.body);
+    console.log("Creating new request:", req.body);
     
+    const requestId = nextId++;
     const request = {
-      id: nextId++,
-      _id: nextId,
+      id: requestId,
+      _id: requestId,
       ...req.body,
       status: "pending",
       createdAt: new Date().toISOString()
     };
     
     requests.push(request);
-    console.log("✅ Request created successfully:", request.id);
+    console.log("Request created successfully:", request.id);
     
     io.emit("newRequest", request);
     res.status(201).json(request);
   } catch (error) {
-    console.error("❌ Error creating request:", error);
+    console.error("Error creating request:", error);
     res.status(500).json({ 
       message: "Server error creating request",
       error: error.message 
@@ -229,11 +256,17 @@ app.post("/api/requests", (req, res) => {
 app.get("/api/users/:userId/requests", (req, res) => {
   console.log("🔍 Fetching requests for user:", req.params.userId);
   const userRequests = requests.filter(r => r.recipientId == req.params.userId);
-  console.log("📊 Found requests:", userRequests.length);
-  res.json(userRequests);
+  const populatedRequests = userRequests.map(req => {
+    const donation = donations.find(d => d.id == req.donationId || d._id == req.donationId);
+    return {
+      ...req,
+      donation: donation || null
+    };
+  });
+  
+  console.log("Found requests:", populatedRequests.length);
+  res.json(populatedRequests);
 });
-
-// ===== DEBUG ROUTES =====
 app.get("/api/debug/users", (req, res) => {
   res.json(users);
 });
@@ -245,8 +278,6 @@ app.get("/api/debug/donations", (req, res) => {
 app.get("/api/debug/requests", (req, res) => {
   res.json(requests);
 });
-
-// ===== HEALTH CHECK =====
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "OK", 
@@ -260,27 +291,23 @@ app.get("/api/health", (req, res) => {
     }
   });
 });
-
-// ===== ERROR HANDLER =====
 app.use((err, req, res, next) => {
-  console.error("❌ Server error:", err);
+  console.error("Server error:", err);
   res.status(500).json({ 
     message: "Internal server error",
     error: err.message 
   });
 });
-
-// ===== START SERVER ON PORT 9000 =====
 const PORT = process.env.PORT || 9900;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log("\n" + "=".repeat(60));
-  console.log("🚀 FOOD DONATION API SERVER");
+  console.log("FOOD DONATION API SERVER");
   console.log("=".repeat(60));
-  console.log(`✅ Server running on: http://localhost:${PORT}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🔍 Debug users: http://localhost:${PORT}/api/debug/users`);
-  console.log(`📦 Debug donations: http://localhost:${PORT}/api/debug/donations`);
-  console.log(`🌐 CORS enabled for: http://localhost:5173`);
+  console.log(`Server running on: http://localhost:${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/api/health`);
+  console.log(`Debug users: http://localhost:${PORT}/api/debug/users`);
+  console.log(`Debug donations: http://localhost:${PORT}/api/debug/donations`);
+  console.log(`CORS enabled for: http://localhost:5173`);
   console.log("=".repeat(60) + "\n");
 });

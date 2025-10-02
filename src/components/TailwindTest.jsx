@@ -1,4 +1,3 @@
-// Simple test component to verify Tailwind
 export default function TailwindTest() {
   return (
     <div className="p-8">

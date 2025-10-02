@@ -7,7 +7,6 @@ export default function DonorDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
         <button
           className={`flex-1 py-4 px-6 text-center font-semibold ${
@@ -17,7 +16,7 @@ export default function DonorDashboard() {
           }`}
           onClick={() => setActiveTab('donate')}
         >
-          ?? Donate Food
+          Donate Food
         </button>
         <button
           className={`flex-1 py-4 px-6 text-center font-semibold ${
@@ -27,11 +26,9 @@ export default function DonorDashboard() {
           }`}
           onClick={() => setActiveTab('history')}
         >
-          ?? Donation History
+          Donation History
         </button>
       </div>
-
-      {/* Tab Content */}
       <div>
         {activeTab === 'donate' && <FoodListingForm />}
         {activeTab === 'history' && <DonationHistory />}

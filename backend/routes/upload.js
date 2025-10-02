@@ -1,8 +1,6 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
-
-// Simple file upload (temporary)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/')
@@ -19,8 +17,6 @@ router.post('/image', upload.single('image'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    
-    // For demo, return local file path
     const imageUrl = `http://localhost:9000/uploads/${req.file.filename}`;
     res.json({ imageUrl });
   } catch (error) {
