@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Icons } from '../components/Icons';
+import toast from 'react-hot-toast';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ export default function Contact() {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    alert('Thank you for your message! We\'ll get back to you soon.');
+    toast.success('Thank you for your message! We\'ll get back to you soon.');
     setFormData({ name: '', email: '', subject: '', message: '' });
     setIsSubmitting(false);
   };

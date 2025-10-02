@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { donationAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const FoodListingForm = () => {
   const [formData, setFormData] = useState({
@@ -216,7 +217,7 @@ const FoodListingForm = () => {
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 5) {
-      alert("Maximum 5 images allowed");
+      toast.error("Maximum 5 images allowed");
       return;
     }
 
@@ -227,7 +228,7 @@ const FoodListingForm = () => {
     );
 
     if (validFiles.length !== files.length) {
-      alert("Please upload only JPG, PNG, or WebP images");
+      toast.error("Please upload only JPG, PNG, or WebP images");
     }
 
     setImages(validFiles.slice(0, 5));
@@ -255,11 +256,11 @@ const FoodListingForm = () => {
 
     if (files.length > 0) {
       if (files.length > 5) {
-        alert("Maximum 5 images allowed. Selected first 5 files.");
+        toast.error("Maximum 5 images allowed. Selected first 5 files.");
       }
       setImages(files.slice(0, 5));
     } else {
-      alert("Please drop valid image files (JPG, PNG, WebP)");
+      toast.error("Please drop valid image files (JPG, PNG, WebP)");
     }
   };
 
@@ -274,12 +275,12 @@ const FoodListingForm = () => {
         !formData.quantity.trim() ||
         !formData.description.trim()
       ) {
-        alert("Please fill in all required food details");
+        toast.error("Please fill in all required food details");
         return;
       }
     } else if (currentStep === 2) {
       if (!formData.expiryDate || !formData.pickupLocation.trim()) {
-        alert("Please fill in all required pickup information");
+        toast.error("Please fill in all required pickup information");
         return;
       }
     }
@@ -300,7 +301,7 @@ const FoodListingForm = () => {
       !formData.expiryDate ||
       !formData.pickupLocation
     ) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -334,7 +335,7 @@ const FoodListingForm = () => {
       }, 3000);
     } catch (error) {
       console.error("Error listing food:", error);
-      alert(
+      toast.error(
         "Error listing food: " +
           (error.response?.data?.message || error.message || "Please try again")
       );

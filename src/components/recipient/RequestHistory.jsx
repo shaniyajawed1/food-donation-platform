@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { requestAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 export default function RequestHistory() {
   const { user } = useAuth();
@@ -42,10 +43,10 @@ export default function RequestHistory() {
       await requestAPI.delete(requestId);
       setRequests((prev) => prev.filter((req) => req.id !== requestId));
 
-      alert("Request deleted successfully!");
+      toast.success("Request deleted successfully!");
     } catch (error) {
       console.error("Failed to delete request:", error);
-      alert(
+      toast.error(
         "Error deleting request: " +
           (error.response?.data?.message || error.message)
       );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { donationAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 export default function DonationHistory() {
   const { user } = useAuth();
@@ -10,8 +11,6 @@ export default function DonationHistory() {
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [donationToDelete, setDonationToDelete] = useState(null);
-
-  // Sorting and filtering states
   const [sortBy, setSortBy] = useState("newest");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -52,13 +51,9 @@ export default function DonationHistory() {
 
   const applySortingAndFiltering = () => {
     let result = [...donations];
-
-    // Apply status filter
     if (statusFilter !== "all") {
       result = result.filter((donation) => donation.status === statusFilter);
     }
-
-    // Apply sorting
     result.sort((a, b) => {
       switch (sortBy) {
         case "newest":
@@ -92,19 +87,13 @@ export default function DonationHistory() {
     setDeleteLoading(donationToDelete._id);
     try {
       await donationAPI.delete(donationToDelete._id);
-
-      // Remove from local state
       setDonations(donations.filter((d) => d._id !== donationToDelete._id));
-
-      // Show success message
-      alert("Donation deleted successfully!");
-
-      // Close modal
+      toast.success("Donation deleted successfully!");
       setShowDeleteModal(false);
       setDonationToDelete(null);
     } catch (error) {
       console.error("Error deleting donation:", error);
-      alert(
+      toast.error(
         "Failed to delete donation: " +
           (error.response?.data?.message || error.message)
       );
@@ -171,12 +160,9 @@ export default function DonationHistory() {
           </span>
         </div>
       </div>
-
-      {/* Sorting and Filtering Controls */}
       <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            {/* Status Filter */}
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Filter by Status
@@ -204,8 +190,6 @@ export default function DonationHistory() {
                 </option>
               </select>
             </div>
-
-            {/* Sort By */}
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Sort By
@@ -224,15 +208,11 @@ export default function DonationHistory() {
               </select>
             </div>
           </div>
-
-          {/* Results Count */}
           <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
             Showing {filteredDonations.length} of {donations.length} donations
           </div>
         </div>
       </div>
-
-      {/* Donations List */}
       {filteredDonations.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
           
@@ -318,8 +298,6 @@ export default function DonationHistory() {
                     </div>
                   )}
                 </div>
-
-                {/* Action Buttons */}
                 <div className="flex lg:flex-col gap-2">
                   <button
                     onClick={() => handleDeleteClick(donation)}
@@ -362,8 +340,6 @@ export default function DonationHistory() {
           ))}
         </div>
       )}
-
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
