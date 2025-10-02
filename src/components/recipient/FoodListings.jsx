@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { donationAPI, requestAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const FoodListings = () => {
   const [donations, setDonations] = useState([]);
@@ -26,7 +27,7 @@ const FoodListings = () => {
   const handleRequest = async (donationId) => {
     try {
       if (!user || !user.id) {
-        alert('Please login to request food');
+        toast.error('Please login to request food');
         return;
       }
 
@@ -37,14 +38,14 @@ const FoodListings = () => {
       };
       
       await requestAPI.create(requestData);
-      alert('Food request sent successfully! The donor will review your request.');
+      toast.success('Food request sent successfully! The donor will review your request.');
       
       
       loadDonations();
       
     } catch (error) {
       console.error('Request error:', error);
-      alert('Error sending request: ' + (error.response?.data?.message || error.message));
+      toast.error('Error sending request: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -64,7 +65,7 @@ const FoodListings = () => {
       
       {donations.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-4xl mb-4">🍽️</div>
+          
           <p>No food donations available right now. Check back later!</p>
         </div>
       ) : (

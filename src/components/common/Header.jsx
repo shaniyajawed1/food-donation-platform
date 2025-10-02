@@ -1,142 +1,205 @@
-// src/components/Header.js
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { Icons } from '../Icons.jsx';
+import { Icons } from "../Icons.jsx";
+import { useState } from "react";
 
 export default function Header() {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { path: "/", label: "Home", icon: <Icons.Home /> },
+    ...(isAuthenticated
+      ? [
+          { path: "/donor", label: "Donate Food", icon: <Icons.Donate /> },
+          { path: "/recipient", label: "Find Food", icon: <Icons.Find /> },
+        ]
+      : [
+          { path: "/about", label: "About", icon: <Icons.About /> },
+          { path: "/contact", label: "Contact", icon: <Icons.Contact /> },
+        ]),
+  ];
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <header className="bg-gradient-to-r from-emerald-900 via-green-800 to-emerald-900 text-white shadow-2xl border-b border-emerald-600/30 backdrop-blur-sm">
-      <nav className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <Link 
-            to="/" 
-            className="flex items-center gap-3 group transition-all duration-300 hover:scale-105"
+    <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/60 shadow-sm sticky top-0 z-50">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <Link
+            to="/"
+            className="flex items-center space-x-3 group"
+            onClick={closeMobileMenu}
           >
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-700 rounded-2xl flex items-center justify-center shadow-2xl group-hover:shadow-emerald-500/25 transition-all duration-300">
-                <Icons.Logo />
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">FN</span>
               </div>
-              <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 to-green-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl blur opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-light tracking-wide text-white">FeedTheNeed</span>
-              <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-400 to-green-300 mt-1 rounded-full"></div>
+            <div>
+              <span className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-emerald-700 bg-clip-text text-transparent">
+                FeedTheNeed
+              </span>
             </div>
           </Link>
-          
-          {/* Navigation */}
-          <div className="flex flex-wrap items-center gap-1">
-            <Link 
-              to="/" 
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-light group relative ${
-                location.pathname === "/" 
-                  ? "bg-white/10 text-emerald-50 shadow-inner border border-white/10" 
-                  : "hover:bg-white/5 text-emerald-100 border border-transparent"
-              }`}
-            >
-              <Icons.Home />
-              <span className="relative z-10">Home</span>
-              {location.pathname === "/" && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3/4 h-0.5 bg-emerald-300 rounded-full"></div>
-              )}
-            </Link>
-            
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                  location.pathname === item.path
+                    ? "text-emerald-600 bg-emerald-50 border border-emerald-200"
+                    : "text-gray-600 hover:text-emerald-600 hover:bg-gray-50"
+                }`}
+              >
+                <span className="w-5 h-5">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
+          <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
-              <>
-                <Link 
-                  to="/donor" 
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-light group relative ${
-                    location.pathname === "/donor" 
-                      ? "bg-white/10 text-emerald-50 shadow-inner border border-white/10" 
-                      : "hover:bg-white/5 text-emerald-100 border border-transparent"
-                  }`}
-                >
-                  <Icons.Donate />
-                  <span className="relative z-10">Donate Food</span>
-                  {location.pathname === "/donor" && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3/4 h-0.5 bg-emerald-300 rounded-full"></div>
-                  )}
-                </Link>
-                
-                <Link 
-                  to="/recipient" 
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-light group relative ${
-                    location.pathname === "/recipient" 
-                      ? "bg-white/10 text-emerald-50 shadow-inner border border-white/10" 
-                      : "hover:bg-white/5 text-emerald-100 border border-transparent"
-                  }`}
-                >
-                  <Icons.Find />
-                  <span className="relative z-10">Find Food</span>
-                  {location.pathname === "/recipient" && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-3/4 h-0.5 bg-emerald-300 rounded-full"></div>
-                  )}
-                </Link>
-                <div className="flex items-center gap-4 ml-4 pl-4 border-l border-emerald-600/40">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center text-white shadow-lg border border-emerald-300/30">
-                      <Icons.User />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-light text-emerald-200">Welcome back</span>
-                      <span className="text-white font-medium">{user?.name}</span>
-                    </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium shadow-sm">
+                    {user?.name?.charAt(0)?.toUpperCase()}
                   </div>
-                  
-                  <button 
-                    onClick={logout}
-                    className="flex items-center gap-2 group relative bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-700 hover:to-red-800 px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-red-500/25 border border-rose-500/30"
-                  >
-                    <Icons.Logout />
-                    <span className="text-sm font-light">Logout</span>
-                  </button>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">
+                      {user?.name}
+                    </span>
+                    <span className="text-xs text-gray-500 capitalize">
+                      {user?.userType}
+                    </span>
+                  </div>
                 </div>
-              </>
+                <button
+                  onClick={logout}
+                  className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 border border-transparent hover:border-red-200"
+                >
+                  <Icons.Logout className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
             ) : (
-              <>
-                <Link 
-                  to="/about" 
-                  className="flex items-center gap-2 px-5 py-3 rounded-xl transition-all duration-300 font-light hover:bg-white/5 text-emerald-100 border border-transparent hover:border-white/5"
+              <div className="flex items-center space-x-3">
+                <Link
+                  to="/login"
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 font-medium ${
+                    location.pathname === "/login"
+                      ? "text-emerald-600 bg-emerald-50 border border-emerald-200"
+                      : "text-gray-600 hover:text-emerald-600 hover:bg-gray-50"
+                  }`}
                 >
-                  <Icons.About />
-                  <span>About</span>
+                  <Icons.User className="w-4 h-4" />
+                  <span>Login</span>
                 </Link>
-                
-                <Link 
-                  to="/contact" 
-                  className="flex items-center gap-2 px-5 py-3 rounded-xl transition-all duration-300 font-light hover:bg-white/5 text-emerald-100 border border-transparent hover:border-white/5"
+                <Link
+                  to="/register"
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-0.5"
                 >
-                  <Icons.Contact />
-                  <span>Contact</span>
+                  Get Started
                 </Link>
-
-                <div className="flex items-center gap-3 ml-4 pl-4 border-l border-emerald-600/40">
-                  <Link 
-                    to="/login" 
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 font-light group ${
-                      location.pathname === "/login" 
-                        ? "bg-white/10 text-emerald-50 shadow-inner border border-white/10" 
-                        : "hover:bg-white/5 text-emerald-100 border border-emerald-500/30"
-                    }`}
-                  >
-                    <Icons.User />
-                    <span>Login</span>
-                  </Link>
-                  
-                  <Link 
-                    to="/register" 
-                    className="flex items-center gap-2 group relative bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 px-6 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-emerald-500/25 border border-emerald-400/30 font-light"
-                  >
-                    <span className="text-white">Get Started</span>
-                  </Link>
-                </div>
-              </>
+              </div>
             )}
           </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+          >
+            <span
+              className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ${
+                isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
+              }`}
+            ></span>
+            <span
+              className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 mt-1.5 ${
+                isMobileMenuOpen ? "opacity-0" : ""
+              }`}
+            ></span>
+            <span
+              className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 mt-1.5 ${
+                isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+              }`}
+            ></span>
+          </button>
         </div>
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl">
+            <div className="px-4 py-4 space-y-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={closeMobileMenu}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${
+                    location.pathname === item.path
+                      ? "text-emerald-600 bg-emerald-50 border border-emerald-200"
+                      : "text-gray-600 hover:text-emerald-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="w-5 h-5">{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+              <div className="pt-4 mt-4 border-t border-gray-200">
+                {isAuthenticated ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 px-4 py-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center text-white font-medium shadow-sm">
+                        {user?.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">
+                          {user?.name}
+                        </div>
+                        <div className="text-sm text-gray-500 capitalize">
+                          {user?.userType}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        closeMobileMenu();
+                      }}
+                      className="flex items-center space-x-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 border border-transparent hover:border-red-200"
+                    >
+                      <Icons.Logout className="w-5 h-5" />
+                      <span className="font-medium">Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Link
+                      to="/login"
+                      onClick={closeMobileMenu}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${
+                        location.pathname === "/login"
+                          ? "text-emerald-600 bg-emerald-50 border border-emerald-200"
+                          : "text-gray-600 hover:text-emerald-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Icons.User className="w-5 h-5" />
+                      <span>Login</span>
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={closeMobileMenu}
+                      className="flex items-center justify-center space-x-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-4 py-3 rounded-xl font-medium shadow-sm transition-all duration-200 mx-4"
+                    >
+                      <span>Get Started</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
     </header>
   );

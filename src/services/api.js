@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:9900/api';
 
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -28,6 +27,7 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
 api.interceptors.response.use(
   (response) => {
     console.log('API Response:', response.status, response.config.url);
@@ -52,6 +52,7 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export const authAPI = {
   register: (userData) => {
     console.log('Registering user:', userData.email);
@@ -66,10 +67,11 @@ export const authAPI = {
     return api.get('/auth/me');
   }
 };
+
 export const donationAPI = {
   getAll: () => {
     console.log('Fetching all donations');
-    return api.get('/donations');
+    return api.get('/donations/available');
   },
   create: (donationData) => {
     console.log('Creating donation:', donationData.foodType);
@@ -86,8 +88,14 @@ export const donationAPI = {
   claimDonation: (donationId) => {
     console.log('Claiming donation:', donationId);
     return api.patch(`/donations/${donationId}/claim`);
+  },
+  delete: (donationId) => {
+    console.log('Deleting donation with ID:', donationId);
+    console.log('Full URL will be:', `${API_BASE_URL}/donations/${donationId}`);
+    return api.delete(`/donations/${donationId}`);
   }
 };
+
 export const requestAPI = {
   create: (requestData) => {
     console.log('Creating request for donation:', requestData.donationId);
@@ -96,8 +104,13 @@ export const requestAPI = {
   getMyRequests: (userId) => {
     console.log('Fetching requests for user:', userId);
     return api.get(`/users/${userId}/requests`);
+  },
+  delete: (requestId) => {
+    console.log('Deleting request with ID:', requestId);
+    return api.delete(`/requests/${requestId}`);
   }
 };
+
 export const healthCheck = () => {
   console.log('Checking API health');
   return api.get('/health');
