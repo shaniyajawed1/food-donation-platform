@@ -2,8 +2,6 @@ import { useState } from 'react';
 
 export default function Map({ location, onLocationSelect }) {
   const [selectedLocation, setSelectedLocation] = useState(location);
-
-  // For now, using a simple input. In production, integrate Google Maps API
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-gray-700 mb-2">

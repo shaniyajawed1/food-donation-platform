@@ -24,8 +24,6 @@ export default function Register() {
 
     try {
       const response = await authAPI.register(formData);
-      
-      // ✅ PROPERLY CHECK SUCCESS
       if (response.data && response.data.user && response.data.token) {
         login(response.data.user, response.data.token);
         navigate("/");

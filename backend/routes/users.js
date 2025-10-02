@@ -2,8 +2,6 @@ const express = require('express');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const router = express.Router();
-
-// Get user profile
 router.get('/profile', auth, async (req, res) => {
   try {
     const user = await User.findById(req.userId).select('-password');
@@ -12,8 +10,6 @@ router.get('/profile', auth, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-// Update user profile
 router.put('/profile', auth, async (req, res) => {
   try {
     const { name, phone, address } = req.body;
@@ -29,8 +25,6 @@ router.put('/profile', auth, async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
-
-// Get user stats
 router.get('/stats', auth, async (req, res) => {
   try {
     const Donation = require('../models/Donation');

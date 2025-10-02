@@ -1,5 +1,4 @@
-// This file can be used for additional authentication utilities
-// Currently using the API service for auth operations
+
 
 export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

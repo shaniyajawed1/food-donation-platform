@@ -33,8 +33,6 @@ export default function RecipientPortal() {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Find Food Donations</h1>
           <p className="text-xl text-gray-600">Browse available food donations near you</p>
         </div>
-
-        {/* Tabs */}
         <div className="flex border-b border-gray-200 mb-8">
           <button
             className={`flex-1 py-4 px-6 text-center font-semibold ${
@@ -44,7 +42,7 @@ export default function RecipientPortal() {
             }`}
             onClick={() => setActiveTab('browse')}
           >
-            🔍 Browse Food
+            Browse Food
           </button>
           <button
             className={`flex-1 py-4 px-6 text-center font-semibold ${
@@ -54,11 +52,9 @@ export default function RecipientPortal() {
             }`}
             onClick={() => setActiveTab('history')}
           >
-            📋 Request History
+            Request History
           </button>
         </div>
-
-        {/* Tab Content */}
         <div>
           {activeTab === 'browse' && <FoodListings />}
           {activeTab === 'history' && <RequestHistory />}

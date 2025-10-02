@@ -1,35 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-// You'll need to create and export this from your API service file
 import { requestAPI } from '../../services/api'; 
 
 export default function RequestHistory() {
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true); // Set initial loading to true
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
-    // This function will fetch the real data from your backend
     const loadRequests = async () => {
       if (!user) {
         setLoading(false);
         return;
       }
       try {
-        setLoading(true); // Start loading
-        // Fetch requests associated with the logged-in user's ID
+        setLoading(true); 
         const response = await requestAPI.getMyRequests(user.id);
         setRequests(response.data);
       } catch (error) {
         console.error('Failed to load request history:', error);
-        // Optionally, you can set an error state here to show a message
       } finally {
-        setLoading(false); // Stop loading, regardless of success or error
+        setLoading(false); 
       }
     };
 
     loadRequests();
-  }, [user]); // The effect re-runs whenever the user object changes
+  }, [user]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -101,11 +97,9 @@ export default function RequestHistory() {
                   </div>
                 </div>
               )}
-
-              {/* Contact information when approved */}
               {request.status === 'approved' && request.donation && (
                 <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <h5 className="font-semibold text-green-900 mb-2">🎉 Request Approved!</h5>
+                  <h5 className="font-semibold text-green-900 mb-2">Request Approved!</h5>
                   <p className="text-green-800">Contact the donor to arrange pickup:</p>
                   <p className="text-green-700 mt-1">
                     <strong>Location:</strong> {request.donation.pickupLocation}
