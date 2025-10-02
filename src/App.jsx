@@ -24,7 +24,7 @@ function App() {
               <Route path="/register" element={<Register />} />
             </Routes>
           </main>
-          <Footer />
+         
         </div>
       </Router>
     </AuthProvider>

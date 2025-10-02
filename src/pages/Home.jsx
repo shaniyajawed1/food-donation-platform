@@ -346,9 +346,9 @@ const Home = () => {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">SB</span>
+                  <span className="text-white font-bold">FN</span>
                 </div>
-                <span className="text-xl font-bold">ShareBite</span>
+                <span className="text-xl font-bold">FeedTheNeed</span>
               </div>
               <p className="text-gray-400 text-sm">
                 Connecting surplus food with communities in need.
@@ -385,7 +385,7 @@ const Home = () => {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-            <p>&copy; 2024 ShareBite. All rights reserved.</p>
+            <p>&copy; 2025 FeedTheNeed. All rights reserved.</p>
           </div>
         </div>
       </footer>
