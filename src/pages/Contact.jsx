@@ -21,8 +21,6 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     alert('Thank you for your message! We\'ll get back to you soon.');
@@ -57,7 +55,6 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl shadow-lg mb-6">
             <Icons.Contact className="w-8 h-8 text-white" />
@@ -71,7 +68,6 @@ export default function Contact() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
-          {/* Contact Information */}
           <div className="lg:col-span-1 space-y-8">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-gray-200/60">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h2>
@@ -100,12 +96,8 @@ export default function Contact() {
                 ))}
               </div>
             </div>
-
-            {/* Stats */}
            
           </div>
-
-          {/* Contact Form */}
           <div className="lg:col-span-2">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-gray-200/60">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Send us a Message</h2>

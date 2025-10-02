@@ -1,4 +1,3 @@
-// src/pages/About.js
 import { Icons } from '../components/Icons';
 
 export default function About() {
@@ -36,7 +35,6 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30">
-      {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -51,13 +49,9 @@ export default function About() {
             </p>
           </div>
         </div>
-        
-        {/* Background Elements */}
         <div className="absolute top-10 left-10 w-20 h-20 bg-emerald-200 rounded-full blur-3xl opacity-30"></div>
         <div className="absolute bottom-10 right-10 w-32 h-32 bg-green-200 rounded-full blur-3xl opacity-30"></div>
       </section>
-
-      {/* Mission Section */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -93,8 +87,6 @@ export default function About() {
           </div>
         </div>
       </section>
-
-      {/* Features Section */}
       <section className="py-16 bg-white/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -119,11 +111,6 @@ export default function About() {
           </div>
         </div>
       </section>
-
-      {/* Team Section */}
-     
-
-      {/* CTA Section */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl p-12 shadow-2xl">

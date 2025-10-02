@@ -20,7 +20,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      console.log('🔄 Starting login process...');
+      console.log('Starting login process...');
       
       const response = await authAPI.login({
         email: formData.email,
@@ -63,59 +63,73 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-emerald-50/30 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-emerald-700 bg-clip-text text-transparent">
+            Welcome Back
           </h2>
+          <p className="mt-2 text-gray-600">
+            Sign in to your FeedTheNeed account
+          </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              <div className="flex items-start">
-                <span className="mr-2">⚠️</span>
-                <div>
-                  <p className="font-semibold">Login Error</p>
-                  <p className="text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Login Error</h3>
+                  <p className="text-sm text-red-700 mt-1">{error}</p>
                 </div>
               </div>
             </div>
           )}
-          
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
               <input
                 id="email"
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="relative block w-full px-3 py-2 border border-gray-300 rounded-t-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10"
-                placeholder="Email address"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                placeholder="Enter your email address"
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
               <input
                 id="password"
                 type="password"
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="relative block w-full px-3 py-2 border border-gray-300 rounded-b-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10"
-                placeholder="Password"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                placeholder="Enter your password"
               />
             </div>
           </div>
-
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <span className="flex items-center">
@@ -123,22 +137,30 @@ export default function Login() {
                   Signing in...
                 </span>
               ) : (
-                "Sign in"
+                "Sign in to your account"
               )}
             </button>
           </div>
-
-          <div className="text-center">
-            <Link to="/register" className="text-green-600 hover:text-green-500">
-              Don't have an account? Sign up
-            </Link>
+          <div className="text-center pt-4 border-t border-gray-200">
+            <p className="text-gray-600">
+              Don't have an account?{" "}
+              <Link 
+                to="/register" 
+                className="font-semibold text-emerald-600 hover:text-emerald-500 transition-colors duration-200"
+              >
+                Create one here
+              </Link>
+            </p>
           </div>
         </form>
         {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
-            <p className="font-semibold mb-1">Debug Info:</p>
-            <p>API Base: http://localhost:9900/api</p>
-            <p>Endpoint: /auth/login</p>
+          <div className="mt-6 p-4 bg-gray-100/50 rounded-xl border border-gray-200">
+            <p className="text-xs font-medium text-gray-700 mb-2">Development Information:</p>
+            <div className="space-y-1 text-xs text-gray-600">
+              <p>API Base: http://localhost:9900/api</p>
+              <p>Endpoint: /auth/login</p>
+              <p>Environment: Development</p>
+            </div>
           </div>
         )}
       </div>

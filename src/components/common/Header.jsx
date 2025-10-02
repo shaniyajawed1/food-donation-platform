@@ -1,4 +1,4 @@
-// src/components/Header.js
+
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Icons } from "../Icons.jsx";
@@ -45,8 +45,6 @@ export default function Header() {
               </span>
             </div>
           </Link>
-
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => (
               <Link
@@ -63,8 +61,6 @@ export default function Header() {
               </Link>
             ))}
           </div>
-
-          {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
@@ -111,8 +107,6 @@ export default function Header() {
               </div>
             )}
           </div>
-
-          {/* Mobile menu button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors duration-200"
@@ -134,8 +128,6 @@ export default function Header() {
             ></span>
           </button>
         </div>
-
-        {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-xl">
             <div className="px-4 py-4 space-y-2">
@@ -154,8 +146,6 @@ export default function Header() {
                   <span>{item.label}</span>
                 </Link>
               ))}
-
-              {/* Mobile Auth Section */}
               <div className="pt-4 mt-4 border-t border-gray-200">
                 {isAuthenticated ? (
                   <div className="space-y-3">
