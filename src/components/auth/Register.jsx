@@ -42,7 +42,6 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-emerald-50/30 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Header */}
         <div className="text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg mb-4">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +75,7 @@ export default function Register() {
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
+                Full Name <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
@@ -91,7 +90,7 @@ export default function Register() {
             
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address *
+                Email Address <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -106,7 +105,7 @@ export default function Register() {
             
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password *
+                Password <span className="text-red-500">*</span>
               </label>
               <input
                 id="password"
