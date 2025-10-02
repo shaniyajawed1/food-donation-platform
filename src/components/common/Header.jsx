@@ -1,8 +1,8 @@
 // src/components/Header.js
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { Icons } from '../Icons.jsx';
-import { useState } from 'react';
+import { Icons } from "../Icons.jsx";
+import { useState } from "react";
 
 export default function Header() {
   const location = useLocation();
@@ -11,13 +11,15 @@ export default function Header() {
 
   const navItems = [
     { path: "/", label: "Home", icon: <Icons.Home /> },
-    ...(isAuthenticated ? [
-      { path: "/donor", label: "Donate Food", icon: <Icons.Donate /> },
-      { path: "/recipient", label: "Find Food", icon: <Icons.Find /> },
-    ] : [
-      { path: "/about", label: "About", icon: <Icons.About /> },
-      { path: "/contact", label: "Contact", icon: <Icons.Contact /> },
-    ])
+    ...(isAuthenticated
+      ? [
+          { path: "/donor", label: "Donate Food", icon: <Icons.Donate /> },
+          { path: "/recipient", label: "Find Food", icon: <Icons.Find /> },
+        ]
+      : [
+          { path: "/about", label: "About", icon: <Icons.About /> },
+          { path: "/contact", label: "Contact", icon: <Icons.Contact /> },
+        ]),
   ];
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -26,15 +28,15 @@ export default function Header() {
     <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/60 shadow-sm sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="flex items-center space-x-3 group"
             onClick={closeMobileMenu}
           >
             <div className="relative">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">FN</span>
-                </div>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">FN</span>
+              </div>
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-xl blur opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
             </div>
             <div>
@@ -71,8 +73,12 @@ export default function Header() {
                     {user?.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-900">{user?.name}</span>
-                    <span className="text-xs text-gray-500 capitalize">{user?.userType}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {user?.name}
+                    </span>
+                    <span className="text-xs text-gray-500 capitalize">
+                      {user?.userType}
+                    </span>
                   </div>
                 </div>
                 <button
@@ -111,9 +117,21 @@ export default function Header() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-100 transition-colors duration-200"
           >
-            <span className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-            <span className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 mt-1.5 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
-            <span className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 mt-1.5 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+            <span
+              className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ${
+                isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
+              }`}
+            ></span>
+            <span
+              className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 mt-1.5 ${
+                isMobileMenuOpen ? "opacity-0" : ""
+              }`}
+            ></span>
+            <span
+              className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 mt-1.5 ${
+                isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+              }`}
+            ></span>
           </button>
         </div>
 
@@ -136,7 +154,7 @@ export default function Header() {
                   <span>{item.label}</span>
                 </Link>
               ))}
-              
+
               {/* Mobile Auth Section */}
               <div className="pt-4 mt-4 border-t border-gray-200">
                 {isAuthenticated ? (
@@ -146,8 +164,12 @@ export default function Header() {
                         {user?.name?.charAt(0)?.toUpperCase()}
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">{user?.name}</div>
-                        <div className="text-sm text-gray-500 capitalize">{user?.userType}</div>
+                        <div className="font-medium text-gray-900">
+                          {user?.name}
+                        </div>
+                        <div className="text-sm text-gray-500 capitalize">
+                          {user?.userType}
+                        </div>
                       </div>
                     </div>
                     <button

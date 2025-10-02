@@ -8,6 +8,8 @@ import RecipientPortal from "./pages/RecipientPortal";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import "./index.css";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
@@ -21,7 +23,9 @@ function App() {
               <Route path="/donor" element={<DonorPortal />} />
               <Route path="/recipient" element={<RecipientPortal />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/about" element={<About/>}/>
               <Route path="/register" element={<Register />} />
+              <Route path="/contact" element={<Contact/>}/>
             </Routes>
           </main>
          
