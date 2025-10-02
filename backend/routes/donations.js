@@ -100,21 +100,32 @@ router.patch('/:id/status', auth, async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+// Backend routes/donations.js - DELETE route
 router.delete('/:id', auth, async (req, res) => {
   try {
+    console.log('DELETE request for donation ID:', req.params.id);
+    
     const donation = await Donation.findById(req.params.id);
     
     if (!donation) {
+      console.log('Donation not found with ID:', req.params.id);
       return res.status(404).json({ message: 'Donation not found' });
     }
 
+    console.log('Found donation:', donation._id);
+    console.log('Donation donor:', donation.donor);
+    console.log('Request user ID:', req.userId);
+
     if (donation.donor.toString() !== req.userId) {
+      console.log('Unauthorized delete attempt');
       return res.status(403).json({ message: 'Not authorized' });
     }
 
     await Donation.findByIdAndDelete(req.params.id);
+    console.log('Donation deleted successfully');
     res.json({ message: 'Donation deleted successfully' });
   } catch (error) {
+    console.error('Delete error:', error);
     res.status(500).json({ message: error.message });
   }
 });

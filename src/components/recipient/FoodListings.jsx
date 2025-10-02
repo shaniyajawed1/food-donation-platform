@@ -64,7 +64,7 @@ const FoodListings = () => {
       
       {donations.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <div className="text-4xl mb-4">🍽️</div>
+          
           <p>No food donations available right now. Check back later!</p>
         </div>
       ) : (
