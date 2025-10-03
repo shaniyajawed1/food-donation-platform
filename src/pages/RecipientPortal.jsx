@@ -1,3 +1,4 @@
+// src/pages/RecipientPortal.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,12 +15,27 @@ export default function RecipientPortal() {
         <div className="max-w-md w-full text-center bg-white rounded-2xl shadow-xl p-8">
           <div className="text-6xl mb-4">🔒</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Login Required</h2>
-          <p className="text-gray-600 mb-6">Please login to browse available food donations in your area.</p>
-          <Link 
-            to="/login" 
-            className="inline-block bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-          >
+          <p className="text-gray-600 mb-6">Please login to browse food donations</p>
+          <Link to="/login" className="inline-block bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700">
             Login Now
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is a recipient
+  if (user?.userType !== 'recipient') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
+        <div className="max-w-md w-full text-center bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+          <p className="text-gray-600 mb-6">
+            This area is for food recipients only. You're registered as a donor.
+          </p>
+          <Link to="/donor" className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700">
+            Go to Donor Portal
           </Link>
         </div>
       </div>

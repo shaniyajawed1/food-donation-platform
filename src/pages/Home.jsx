@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 
 const Home = () => {
   const [activeFeature, setActiveFeature] = useState(0);
-
-  // Icons configuration
   const icons = {
     list: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,8 +140,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* How It Works Section */}
       <section id="how-it-works" className="py-20 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
@@ -169,8 +165,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* For Donors Section */}
       <section id="for-donors" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -221,8 +215,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* For Recipients Section */}
       <section id="for-recipients" className="py-20 bg-gradient-to-br from-gray-50 to-blue-50/30">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -289,8 +281,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
       <section className="py-24 bg-gradient-to-r from-blue-600 via-purple-600 to-green-500 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="absolute top-0 left-0 w-72 h-72 bg-white/10 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-blob"></div>
@@ -327,8 +317,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
