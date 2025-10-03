@@ -12,6 +12,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import { Toaster } from "react-hot-toast";
 import MyDonations from "./components/donor/Donations-List";
+import MyImpact from "./components/donor/MyImpact";
 function App() {
   return (
     <AuthProvider>
@@ -65,6 +66,7 @@ function App() {
               <Route path="/recipient/dashboard" element={<RecipientPortal />} />
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
+              <Route path="/donor/impact" element={<MyImpact/>}/>
               <Route path="/register" element={<Register />} />
              
               <Route path="/contact" element={<Contact />} />
