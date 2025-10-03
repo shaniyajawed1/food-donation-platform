@@ -3,7 +3,7 @@ import { donationAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
-const FoodListingForm = () => {
+const FoodListingForm = ({ onSuccess }) => {  
   const [formData, setFormData] = useState({
     foodType: "",
     quantity: "",
@@ -332,7 +332,13 @@ const FoodListingForm = () => {
         });
         setImages([]);
         setCurrentStep(1);
-      }, 3000);
+        if (onSuccess) {
+          onSuccess();
+        }
+        toast.success("Donation created successfully!");
+        
+      }, 2000);
+      
     } catch (error) {
       console.error("Error listing food:", error);
       toast.error(
@@ -374,7 +380,7 @@ const FoodListingForm = () => {
               your donation.
             </p>
             <div className="text-emerald-600 text-sm font-semibold animate-pulse">
-              Redirecting in 3 seconds...
+              Refreshing dashboard...
             </div>
           </div>
         </div>
