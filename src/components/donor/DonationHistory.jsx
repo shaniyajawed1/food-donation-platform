@@ -3,7 +3,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { donationAPI } from "../../services/api";
 import toast from "react-hot-toast";
 
-export default function DonationHistory() {
+export default function DonationHistory({ onUpdate }) {  // Add onUpdate prop
   const { user } = useAuth();
   const [donations, setDonations] = useState([]);
   const [filteredDonations, setFilteredDonations] = useState([]);
@@ -91,6 +91,12 @@ export default function DonationHistory() {
       toast.success("Donation deleted successfully!");
       setShowDeleteModal(false);
       setDonationToDelete(null);
+      
+      // Call the onUpdate callback to refresh parent dashboard
+      if (onUpdate) {
+        console.log("Calling onUpdate to refresh dashboard stats...");
+        onUpdate();
+      }
     } catch (error) {
       console.error("Error deleting donation:", error);
       toast.error(

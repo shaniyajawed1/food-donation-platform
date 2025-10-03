@@ -11,6 +11,7 @@ import "./index.css";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import { Toaster } from "react-hot-toast";
+import MyDonations from "./components/donor/Donations-List";
 function App() {
   return (
     <AuthProvider>
@@ -60,10 +61,12 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/donor/dashboard" element={<DonorPortal />} />
-              <Route path="/recipient" element={<RecipientPortal />} />
+              <Route path="/donor/donations" element={<MyDonations/>}/>
+              <Route path="/recipient/dashboard" element={<RecipientPortal />} />
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
               <Route path="/register" element={<Register />} />
+             
               <Route path="/contact" element={<Contact />} />
             </Routes>
           </main>

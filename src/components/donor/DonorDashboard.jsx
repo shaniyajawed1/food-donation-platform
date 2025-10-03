@@ -55,11 +55,10 @@ export default function DonorDashboard() {
     const activeDonations = donations.filter(d => d.status === 'available').length;
     const completedDonations = donations.filter(d => d.status === 'completed').length;
     
-    // Calculate total impact based on quantity
+    
     const totalImpact = donations
       .filter(d => d.status === 'completed')
       .reduce((total, donation) => {
-        // Extract numeric value from quantity string (e.g., "10 meals" -> 10)
         const quantityMatch = donation.quantity.match(/\d+/);
         const quantity = quantityMatch ? parseInt(quantityMatch[0]) : 0;
         return total + quantity;
@@ -84,7 +83,6 @@ export default function DonorDashboard() {
     try {
       const response = await donationAPI.getMyDonations();
       const donations = response.data;
-      // Get latest 3 donations
       const recent = donations.slice(0, 3);
       console.log('Recent donations:', recent);
       setRecentDonations(recent);
@@ -124,7 +122,6 @@ export default function DonorDashboard() {
 
   const getMemberSince = () => {
     try {
-      // Try different possible date fields
       const dateString = user?.createdAt || user?.created_at || user?.dateJoined || user?.registrationDate;
       
       if (!dateString) {
@@ -148,9 +145,8 @@ export default function DonorDashboard() {
 
   const handleDonationSuccess = () => {
     console.log('Donation created successfully, refreshing data...');
-    // Refresh data after successful donation creation
     fetchDashboardData();
-    setActiveTab('history'); // Switch to history tab to see the new donation
+    setActiveTab('history'); 
   };
 
   const handleDonationUpdate = () => {
@@ -209,7 +205,6 @@ export default function DonorDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 py-8">
       <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -228,8 +223,6 @@ export default function DonorDashboard() {
             </div>
           </div>
         </div>
-
-        {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
@@ -293,7 +286,6 @@ export default function DonorDashboard() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="xl:col-span-2">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8">
               <div className="flex border-b border-slate-200">
@@ -330,11 +322,8 @@ export default function DonorDashboard() {
               </div>
             </div>
           </div>
-
-          {/* Sidebar */}
           <div className="xl:col-span-1">
             <div className="space-y-6">
-              {/* Recent Donations */}
               <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-serif font-normal text-slate-900 text-lg">Recent Donations</h3>
@@ -386,8 +375,6 @@ export default function DonorDashboard() {
                   )}
                 </div>
               </div>
-
-              {/* Quick Actions */}
               <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                 <h3 className="font-serif font-normal text-slate-900 text-lg mb-4">Quick Actions</h3>
                 <div className="space-y-3">

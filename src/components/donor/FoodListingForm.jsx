@@ -620,8 +620,6 @@ const FoodListingForm = ({ onSuccess }) => {
                       placeholder="e.g., Contains nuts, gluten, dairy, etc."
                     />
                   </div>
-
-                  {/* Pickup Time Suggestions */}
                   <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
                     <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                       {icons.clock}
