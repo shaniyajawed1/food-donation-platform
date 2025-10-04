@@ -115,7 +115,7 @@ const Home = () => {
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
-                to="/donor"
+                to="/donor/dashboard"
                 className="group bg-gradient-to-r from-blue-600 to-blue-700 text-white px-10 py-5 rounded-2xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 shadow-lg"
               >
                 <span className="flex items-center justify-center gap-3">
@@ -126,7 +126,7 @@ const Home = () => {
                 </span>
               </Link>
               <Link
-                to="/recipient"
+                to="/recipient/dashboard"
                 className="group border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-semibold hover:border-blue-500 hover:text-blue-600 transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
               >
                 <span className="flex items-center justify-center gap-3">
