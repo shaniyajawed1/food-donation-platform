@@ -1,4 +1,4 @@
-// src/pages/DonorPortal.jsx
+
 import { useAuth } from '../contexts/AuthContext';
 import DonorDashboard from '../components/donor/DonorDashboard';
 import { Link, Navigate } from 'react-router-dom';
