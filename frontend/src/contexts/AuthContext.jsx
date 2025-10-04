@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -29,12 +30,42 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  const register = async (userData) => {
+    console.log('Register function called with:', userData.email, 'Type:', userData.userType);
+    
+    try {
+      const response = await authAPI.register(userData);
+      const { user: registeredUser, token } = response.data;
+      
+      const normalizedUser = {
+        ...registeredUser,
+        id: registeredUser.id || registeredUser._id,
+        _id: registeredUser._id || registeredUser.id,
+        userType: registeredUser.userType || userData.userType 
+      };
+      
+      setUser(normalizedUser);
+      setIsAuthenticated(true);
+      
+      localStorage.setItem("user", JSON.stringify(normalizedUser));
+      localStorage.setItem("token", token);
+      
+      console.log('User registered successfully:', normalizedUser.email, 'as', normalizedUser.userType);
+      return normalizedUser;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
+
   const login = (userData, token) => {
     console.log('Login function called with:', userData);
+    
     const normalizedUser = {
       ...userData,
       id: userData.id || userData._id,
-      _id: userData._id || userData.id
+      _id: userData._id || userData.id,
+      userType: userData.userType 
     };
     
     setUser(normalizedUser);
@@ -43,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(normalizedUser));
     localStorage.setItem("token", token);
     
-    console.log('User logged in successfully:', normalizedUser.email);
+    console.log('User logged in successfully:', normalizedUser.email, 'Type:', normalizedUser.userType);
     console.log('Auth state updated:', { isAuthenticated: true });
   };
 
@@ -60,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     user,
     isAuthenticated,
     loading,
+    register, 
     login,
     logout
   };
