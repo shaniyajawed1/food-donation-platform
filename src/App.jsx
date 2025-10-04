@@ -13,6 +13,7 @@ import Contact from "./pages/Contact";
 import { Toaster } from "react-hot-toast";
 import MyDonations from "./components/donor/Donations-List";
 import MyImpact from "./components/donor/MyImpact";
+import FindFood from "./components/recipient/FindFood";
 function App() {
   return (
     <AuthProvider>
@@ -64,6 +65,7 @@ function App() {
               <Route path="/donor/dashboard" element={<DonorPortal />} />
               <Route path="/donor/donations" element={<MyDonations/>}/>
               <Route path="/recipient/dashboard" element={<RecipientPortal />} />
+              <Route path="/recipient/food-listings" element={<FindFood/>}/>
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
               <Route path="/donor/impact" element={<MyImpact/>}/>
