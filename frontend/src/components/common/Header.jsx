@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Icons } from "../Icons.jsx";
 import { useState } from "react";
@@ -8,7 +8,7 @@ export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
+  const navigate = useNavigate();
   const baseNavItems = [
     { path: "/", label: "Home", icon: <Icons.Home /> },
   ];
@@ -53,10 +53,8 @@ export default function Header() {
       await logout();
       setShowLogoutModal(false);
       setIsMobileMenuOpen(false);
-      
-      // Refresh the page after logout
       setTimeout(() => {
-        window.location.reload();
+        navigate("/");
       }, 100);
     } catch (error) {
       console.error('Logout error:', error);
@@ -251,8 +249,6 @@ export default function Header() {
           )}
         </nav>
       </header>
-
-      {/* Logout Confirmation Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all duration-300 scale-100">

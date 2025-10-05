@@ -198,8 +198,6 @@ export default function RequestHistory() {
               Find More Food
             </Link>
           </div>
-
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-white rounded-xl p-4 border border-emerald-100 text-center shadow-sm">
               <div className="text-2xl font-serif font-normal text-emerald-900 mb-1">
@@ -252,8 +250,6 @@ export default function RequestHistory() {
             </div>
           </div>
         </div>
-
-        {/* Requests Grid */}
         {filteredRequests.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-emerald-200">
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
