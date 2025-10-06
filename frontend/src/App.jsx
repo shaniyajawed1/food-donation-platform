@@ -15,6 +15,7 @@ import MyDonations from "./components/donor/Donations-List";
 import MyImpact from "./components/donor/MyImpact";
 import FindFood from "./components/recipient/FindFood";
 import FoodListingDetails from "./components/recipient/FoodListingDetails";
+import MyRequests from "./components/recipient/MyRequests";
 function App() {
   return (
     <AuthProvider>
@@ -78,7 +79,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/donor/impact" element={<MyImpact />} />
               <Route path="/register" element={<Register />} />
-
+              <Route path="/recipient/requests" element={<MyRequests />} />
               <Route path="/contact" element={<Contact />} />
             </Routes>
           </main>
