@@ -100,7 +100,6 @@ router.patch('/:id/status', auth, async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
-// Backend routes/donations.js - DELETE route
 router.delete('/:id', auth, async (req, res) => {
   try {
     console.log('DELETE request for donation ID:', req.params.id);

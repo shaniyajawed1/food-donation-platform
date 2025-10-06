@@ -93,17 +93,14 @@ export default function MyImpact() {
     const activeDonations = donations.filter(d => d.status === 'available');
     const reservedDonations = donations.filter(d => d.status === 'reserved');
 
-    // Calculate meals provided based on quantity field
     const mealsProvided = completedDonations.reduce((total, donation) => {
       const quantity = extractQuantity(donation.quantity);
       return total + quantity;
     }, 0);
-
-    // Impact calculations (approximate)
-    const co2Reduced = mealsProvided * 2.5; // kg CO2 per meal saved
-    const waterSaved = mealsProvided * 1000; // liters water per meal
-    const moneySaved = mealsProvided * 8; // $ value per meal
-    const peopleHelped = completedDonations.length * 3; // approx people helped per donation
+    const co2Reduced = mealsProvided * 2.5; 
+    const waterSaved = mealsProvided * 1000; 
+    const moneySaved = mealsProvided * 8;
+    const peopleHelped = completedDonations.length * 3; 
 
     const newImpactData = {
       totalDonations: donations.length,
@@ -120,8 +117,6 @@ export default function MyImpact() {
     console.log("Calculated impact data:", newImpactData);
     setImpactData(newImpactData);
   };
-
-  // Helper function to extract quantity from string like "5 kg", "10 items", etc.
   const extractQuantity = (quantityString) => {
     if (!quantityString) return 1;
     
@@ -230,8 +225,6 @@ export default function MyImpact() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div>
@@ -260,8 +253,6 @@ export default function MyImpact() {
               </Link>
             </div>
           </div>
-
-          {/* Error Message */}
           {error && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
               <div className="flex items-center">
@@ -272,10 +263,7 @@ export default function MyImpact() {
               </div>
             </div>
           )}
-
-          {/* Impact Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Total Donations */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -290,8 +278,6 @@ export default function MyImpact() {
                 <p className="text-xs text-gray-500">All your contributions</p>
               </div>
             </div>
-
-            {/* Meals Provided */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -306,8 +292,6 @@ export default function MyImpact() {
                 <p className="text-xs text-gray-500">Approximate meals saved</p>
               </div>
             </div>
-
-            {/* CO2 Reduced */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -322,8 +306,6 @@ export default function MyImpact() {
                 <p className="text-xs text-gray-500">Carbon footprint saved</p>
               </div>
             </div>
-
-            {/* People Helped */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -340,14 +322,8 @@ export default function MyImpact() {
             </div>
           </div>
         </div>
-
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left Column - Stats and Progress */}
           <div className="lg:col-span-2 space-y-8">
-            
-            {/* Donation Status Overview */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Donation Status</h3>
               
@@ -377,8 +353,6 @@ export default function MyImpact() {
                 </div>
               </div>
             </div>
-
-            {/* Environmental Impact */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Environmental Impact</h3>
               
@@ -423,8 +397,6 @@ export default function MyImpact() {
                 </div>
               </div>
             </div>
-
-            {/* Impact Comparison */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Your Impact Equals</h3>
               
@@ -471,11 +443,7 @@ export default function MyImpact() {
               </div>
             </div>
           </div>
-
-          {/* Right Column - Activity and Milestones */}
           <div className="space-y-8">
-            
-            {/* Recent Activity */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
               
@@ -522,8 +490,6 @@ export default function MyImpact() {
                 )}
               </div>
             </div>
-
-            {/* Next Milestone */}
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Next Milestone</h3>
               
@@ -554,8 +520,6 @@ export default function MyImpact() {
                 )}
               </div>
             </div>
-
-            {/* Quick Actions */}
             <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-6 text-white">
               <h3 className="font-semibold text-lg mb-3">Share Your Impact</h3>
               <p className="text-green-100 text-sm mb-4">

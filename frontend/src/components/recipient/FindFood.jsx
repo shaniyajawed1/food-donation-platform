@@ -24,7 +24,6 @@ export default function FindFood() {
       const response = await donationAPI.getAll();
       
       if (response.data) {
-        // Filter only available donations and add status badge
         const availableDonations = response.data.map(listing => ({
           ...listing,
           status: getStatusBadge(listing)
@@ -49,16 +48,12 @@ export default function FindFood() {
       setLoading(false);
     }
   };
-
-  // Helper function to get status badge based on donation data
   const getStatusBadge = (listing) => {
     if (listing.status === 'completed') return { text: 'Completed', color: 'bg-green-100 text-green-800' };
     if (listing.status === 'reserved') return { text: 'Reserved', color: 'bg-blue-100 text-blue-800' };
     if (listing.status === 'cancelled') return { text: 'Cancelled', color: 'bg-red-100 text-red-800' };
     return { text: 'Available', color: 'bg-emerald-100 text-emerald-800' };
   };
-
-  // Function to get donor display name
   const getDonorDisplayName = (listing) => {
     if (listing.donor?.name) {
       return listing.donor.name;
@@ -71,8 +66,6 @@ export default function FindFood() {
     }
     return "Local Business";
   };
-
-  // Function to get food items for display
   const getFoodItems = (listing) => {
     if (listing.foodItems && listing.foodItems.length > 0) {
       return listing.foodItems;
@@ -82,8 +75,6 @@ export default function FindFood() {
     }
     return ["Fresh Food"];
   };
-
-  // Function to get description
   const getDescription = (listing) => {
     if (listing.description) {
       return listing.description;
@@ -93,8 +84,6 @@ export default function FindFood() {
     }
     return "Fresh food donation available for immediate pickup";
   };
-
-  // Function to get days until expiry
   const getDaysUntilExpiry = (expiryDate) => {
     if (!expiryDate) return null;
     const today = new Date();
@@ -102,8 +91,6 @@ export default function FindFood() {
     const diffTime = expiry - today;
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
-
-  // Function to get expiry badge
   const getExpiryBadge = (days) => {
     if (days === null) return null;
     if (days < 0) return { text: 'Expired', color: 'bg-red-100 text-red-800' };
@@ -153,8 +140,6 @@ export default function FindFood() {
             Discover fresh food donations from local businesses and restaurants near you
           </p>
         </div>
-
-        {/* Search and Filter Section */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6 mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
@@ -187,8 +172,6 @@ export default function FindFood() {
             </div>
           </div>
         </div>
-
-        {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
             <div className="flex items-center">
@@ -206,8 +189,6 @@ export default function FindFood() {
             </div>
           </div>
         )}
-
-        {/* Results Header */}
         <div className="flex justify-between items-center mb-6">
           <p className="text-gray-600">
             {filteredListings.length} food listing{filteredListings.length !== 1 ? 's' : ''} available
@@ -224,8 +205,6 @@ export default function FindFood() {
             </button>
           )}
         </div>
-
-        {/* No Results */}
         {filteredListings.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -249,7 +228,6 @@ export default function FindFood() {
             )}
           </div>
         ) : (
-          /* Food Listings Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredListings.map((listing) => {
               const daysUntilExpiry = getDaysUntilExpiry(listing.expiryDate);
@@ -261,7 +239,6 @@ export default function FindFood() {
                   key={listing._id || listing.id}
                   className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
                 >
-                  {/* Header with status badges */}
                   <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusBadge.color}`}>
                       {statusBadge.text}
@@ -272,8 +249,6 @@ export default function FindFood() {
                       </span>
                     )}
                   </div>
-
-                  {/* Image */}
                   <div className="h-48 bg-gradient-to-br from-emerald-100 to-blue-100 flex items-center justify-center">
                     {listing.image ? (
                       <img
@@ -285,8 +260,6 @@ export default function FindFood() {
                       <Icons.Meals className="w-12 h-12 text-emerald-400" />
                     )}
                   </div>
-
-                  {/* Content */}
                   <div className="p-6">
                     <div className="mb-3">
                       <h3 className="font-semibold text-gray-900 text-lg mb-2 line-clamp-1">
@@ -296,8 +269,6 @@ export default function FindFood() {
                         {getDescription(listing)}
                       </p>
                     </div>
-
-                    {/* Food Items */}
                     <div className="mb-4">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">Food Items:</h4>
                       <div className="flex flex-wrap gap-2">
@@ -316,8 +287,6 @@ export default function FindFood() {
                         )}
                       </div>
                     </div>
-
-                    {/* Details */}
                     <div className="space-y-2 text-sm text-gray-600 mb-4">
                       <div className="flex justify-between">
                         <span>Quantity:</span>
@@ -348,8 +317,6 @@ export default function FindFood() {
                         </div>
                       )}
                     </div>
-
-                    {/* Action Button */}
                     <div className="mt-4">
                       <Link
                         to={`/recipient/food-listings/${listing._id || listing.id}`}
@@ -368,8 +335,6 @@ export default function FindFood() {
             })}
           </div>
         )}
-
-        {/* Refresh Button */}
         {filteredListings.length > 0 && (
           <div className="text-center mt-8">
             <button
@@ -380,8 +345,6 @@ export default function FindFood() {
             </button>
           </div>
         )}
-
-        {/* Development Info */}
         {import.meta.env.DEV && (
           <div className="mt-8 p-6 bg-gray-100/50 rounded-2xl border border-gray-200">
             <p className="text-sm font-medium text-gray-700 mb-3">Development Information:</p>

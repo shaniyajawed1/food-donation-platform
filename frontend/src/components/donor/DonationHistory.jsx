@@ -91,8 +91,6 @@ export default function DonationHistory({ onUpdate }) {
       toast.success("Donation deleted successfully!");
       setShowDeleteModal(false);
       setDonationToDelete(null);
-      
-      // Call the onUpdate callback to refresh parent dashboard
       if (onUpdate) {
         console.log("Calling onUpdate to refresh dashboard stats...");
         onUpdate();
