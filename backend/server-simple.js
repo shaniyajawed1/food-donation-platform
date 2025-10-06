@@ -3,6 +3,7 @@ const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
 const connectDB = require("./config/database");
+const requestRoutes = require('./routes/requests');
 require('dotenv').config();
 
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/requests', requestRoutes);
 
 app.get("/api/health", async (req, res) => {
   const mongoose = require('mongoose');

@@ -61,7 +61,7 @@ export const authAPI = {
   login: (credentials) => {
     console.log('Logging in user:', credentials.email);
     return api.post('/auth/login', credentials);
-  },
+  }, 
   getCurrentUser: () => {
     console.log('Fetching current user');
     return api.get('/auth/me');
@@ -101,9 +101,9 @@ export const requestAPI = {
     console.log('Creating request for donation:', requestData.donationId);
     return api.post('/requests', requestData);
   },
-  getMyRequests: (userId) => {
-    console.log('Fetching requests for user:', userId);
-    return api.get(`/users/${userId}/requests`);
+  getMyRequests: () => {
+    console.log('Fetching my requests');
+    return api.get('/requests/my-requests');
   },
   delete: (requestId) => {
     console.log('Deleting request with ID:', requestId);
