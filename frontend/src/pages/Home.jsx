@@ -270,7 +270,7 @@ const Home = () => {
                 to="/recipient" 
                 className="group inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-12 py-5 rounded-2xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 shadow-lg"
               >
-                <span className="flex items-center gap-3">
+                <span className="flex it ems-center gap-3">
                   Find Food Now
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

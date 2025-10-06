@@ -3,7 +3,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { donationAPI } from "../../services/api";
 import toast from "react-hot-toast";
 
-export default function DonationHistory({ onUpdate }) {  // Add onUpdate prop
+export default function DonationHistory({ onUpdate }) {  
   const { user } = useAuth();
   const [donations, setDonations] = useState([]);
   const [filteredDonations, setFilteredDonations] = useState([]);
@@ -144,7 +144,6 @@ export default function DonationHistory({ onUpdate }) {  // Add onUpdate prop
 
   return (
     <div className="space-y-6">
-      {/* Header with Stats */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>
           <h3 className="text-2xl font-bold text-gray-900">

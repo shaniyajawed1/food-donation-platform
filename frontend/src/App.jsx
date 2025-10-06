@@ -64,15 +64,21 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/donor/dashboard" element={<DonorPortal />} />
-              <Route path="/donor/donations" element={<MyDonations/>}/>
-              <Route path="/recipient/dashboard" element={<RecipientPortal />} />
-              <Route path="/recipient/food-listings" element={<FindFood/>}/>
+              <Route path="/donor/donations" element={<MyDonations />} />
+              <Route
+                path="/recipient/dashboard"
+                element={<RecipientPortal />}
+              />
+              <Route path="/recipient/food-listings" element={<FindFood />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/recipient/food-listings/:id" element={<FoodListingDetails />} />
+              <Route
+                path="/recipient/food-listings/:id"
+                element={<FoodListingDetails />}
+              />
               <Route path="/about" element={<About />} />
-              <Route path="/donor/impact" element={<MyImpact/>}/>
+              <Route path="/donor/impact" element={<MyImpact />} />
               <Route path="/register" element={<Register />} />
-             
+
               <Route path="/contact" element={<Contact />} />
             </Routes>
           </main>
