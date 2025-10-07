@@ -317,8 +317,8 @@ const FoodListingForm = ({ onSuccess }) => {
             for (let [key, value] of formData.entries()) {
               console.log(key, value);
             }
-  
-            const res = await fetch('http://localhost:9900/api/upload/image', {
+            const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:9900';
+            const res = await fetch(`${backendUrl}/api/upload/image`, {
               method: 'POST',
               body: formData,
             });

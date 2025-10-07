@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, 
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -43,13 +43,19 @@ router.post('/image', upload.single('image'), (req, res) => {
       console.log('No file in request');
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    const imageUrl = `http://localhost:9900/uploads/${req.file.filename}`;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const baseUrl = isProduction 
+      ? 'https://food-donation-platform-production-61ad.up.railway.app'
+      : `http://localhost:${process.env.PORT || 9900}`;
     
-    console.log('✅ Image uploaded successfully:', {
+    const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    
+    console.log('Image uploaded successfully:', {
       filename: req.file.filename,
       size: req.file.size,
       mimetype: req.file.mimetype,
-      url: imageUrl
+      url: imageUrl,
+      environment: isProduction ? 'production' : 'development'
     });
     
     res.json({ 
@@ -66,8 +72,15 @@ router.post('/image', upload.single('image'), (req, res) => {
   }
 });
 router.get('/test', (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const baseUrl = isProduction 
+    ? 'https://food-donation-platform-production-61ad.up.railway.app'
+    : `http://localhost:${process.env.PORT || 9900}`;
+    
   res.json({ 
     message: 'Upload endpoint is working!',
+    environment: isProduction ? 'production' : 'development',
+    baseUrl: baseUrl,
     endpoint: 'POST /api/upload/image',
     note: 'Send FormData with "image" field'
   });
