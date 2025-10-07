@@ -3,7 +3,7 @@ import { donationAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
-const FoodListingForm = ({ onSuccess }) => {  
+const FoodListingForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     foodType: "",
     quantity: "",
@@ -293,34 +293,80 @@ const FoodListingForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (
-      !formData.foodType ||
-      !formData.quantity ||
-      !formData.description ||
-      !formData.expiryDate ||
-      !formData.pickupLocation
-    ) {
+    if (!formData.foodType.trim() || !formData.quantity.trim() || 
+        !formData.description.trim() || !formData.expiryDate || 
+        !formData.pickupLocation.trim()) {
       toast.error("Please fill in all required fields");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
+      const uploadedImageUrls = [];
+  
+      if (images.length > 0) {
+        for (const image of images) {
+          try {
+            console.log('Uploading image:', image.name, image.type, image.size);
+            
+            const formData = new FormData();
+            formData.append('image', image); 
+  
+            console.log('FormData entries:');
+            for (let [key, value] of formData.entries()) {
+              console.log(key, value);
+            }
+  
+            const res = await fetch('http://localhost:9900/api/upload/image', {
+              method: 'POST',
+              body: formData,
+            });
+  
+            console.log('Upload response status:', res.status);
+  
+            if (!res.ok) {
+              const errorText = await res.text();
+              console.error('Upload failed response:', errorText);
+              throw new Error(`Upload failed: ${res.status} - ${errorText}`);
+            }
+  
+            const data = await res.json();
+            console.log('Upload response data:', data);
+            
+            if (!data.imageUrl) {
+              throw new Error('No image URL returned from server');
+            }
+            
+            uploadedImageUrls.push(data.imageUrl);
+            console.log('Image uploaded successfully:', data.imageUrl);
+            toast.success(`Uploaded ${image.name} successfully`);
+            
+          } catch (imageError) {
+            console.error('Failed to upload image:', imageError);
+            toast.error(`Failed to upload ${image.name}: ${imageError.message}`);
+          }
+        }
+      }
+      if (images.length > 0 && uploadedImageUrls.length === 0) {
+        toast.error('No images were uploaded successfully. Continuing without images.');
+      }
       const donationData = {
         ...formData,
         donorId: user?.id,
-        images: images,
-        status: "available",
+        images: uploadedImageUrls,
+        status: 'available',
         createdAt: new Date().toISOString(),
       };
-
+  
+      console.log('Submitting donation with images:', uploadedImageUrls);
       await donationAPI.create(donationData);
-
+  
+      toast.success('Donation created successfully!');
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
+        if (onSuccess) onSuccess();
         setFormData({
           foodType: "",
           quantity: "",
@@ -332,22 +378,14 @@ const FoodListingForm = ({ onSuccess }) => {
         });
         setImages([]);
         setCurrentStep(1);
-        if (onSuccess) {
-          onSuccess();
-        }
-        toast.success("Donation created successfully!");
-        
       }, 2000);
-      
-    } catch (error) {
-      console.error("Error listing food:", error);
-      toast.error(
-        "Error listing food: " +
-          (error.response?.data?.message || error.message || "Please try again")
-      );
+  
+    } catch (err) {
+      console.error('Submission error:', err);
+      toast.error(err.message || 'Error creating donation');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handlePickupTimeSelect = (time) => {
@@ -513,7 +551,7 @@ const FoodListingForm = ({ onSuccess }) => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Food Type *
+                      Food Type <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -529,7 +567,7 @@ const FoodListingForm = ({ onSuccess }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quantity *
+                      Quantity <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -545,7 +583,7 @@ const FoodListingForm = ({ onSuccess }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description *
+                      Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       required
@@ -571,7 +609,7 @@ const FoodListingForm = ({ onSuccess }) => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Expiry Date *
+                      Expiry Date <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -587,7 +625,7 @@ const FoodListingForm = ({ onSuccess }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pickup Location *
+                      Pickup Location <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       required
