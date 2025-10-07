@@ -1,22 +1,15 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const stream = require('stream');
 const router = express.Router();
-const uploadsDir = 'uploads';
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const originalName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '-');
-    cb(null, 'image-' + uniqueSuffix + path.extname(originalName));
-  }
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -31,36 +24,41 @@ const upload = multer({
     }
   }
 });
-router.post('/image', upload.single('image'), (req, res) => {
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'food-donations',
+        public_id: `image-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(buffer);
+    bufferStream.pipe(uploadStream);
+  });
+};
+
+router.post('/image', upload.single('image'), async (req, res) => {
   try {
-    console.log('Upload request received:', {
-      file: req.file ? req.file.originalname : 'No file',
-      body: req.body,
-      headers: req.headers
-    });
+    console.log('Upload request received');
 
     if (!req.file) {
       console.log('No file in request');
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    const isProduction = process.env.NODE_ENV === 'production';
-    const baseUrl = isProduction 
-      ? 'https://food-donation-platform-production-61ad.up.railway.app'
-      : `http://localhost:${process.env.PORT || 9900}`;
+
     
-    const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    const result = await uploadToCloudinary(req.file.buffer);
     
-    console.log('Image uploaded successfully:', {
-      filename: req.file.filename,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-      url: imageUrl,
-      environment: isProduction ? 'production' : 'development'
-    });
+    console.log('Image uploaded to Cloudinary:', result.secure_url);
     
     res.json({ 
       success: true,
-      imageUrl: imageUrl,
+      imageUrl: result.secure_url,
       message: 'Image uploaded successfully'
     });
   } catch (error) {
@@ -72,15 +70,8 @@ router.post('/image', upload.single('image'), (req, res) => {
   }
 });
 router.get('/test', (req, res) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const baseUrl = isProduction 
-    ? 'https://food-donation-platform-production-61ad.up.railway.app'
-    : `http://localhost:${process.env.PORT || 9900}`;
-    
   res.json({ 
     message: 'Upload endpoint is working!',
-    environment: isProduction ? 'production' : 'development',
-    baseUrl: baseUrl,
     endpoint: 'POST /api/upload/image',
     note: 'Send FormData with "image" field'
   });

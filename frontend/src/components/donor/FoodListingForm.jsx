@@ -312,8 +312,6 @@ const FoodListingForm = ({ onSuccess }) => {
             
             const formData = new FormData();
             formData.append('image', image); 
-  
-            // ✅ FIX: Handle both cases properly
             const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:9900';
             const uploadUrl = `${backendUrl}/api/upload/image`;
             
