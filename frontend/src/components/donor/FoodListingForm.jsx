@@ -293,75 +293,86 @@ const FoodListingForm = ({ onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.foodType.trim() || !formData.quantity.trim() || 
-        !formData.description.trim() || !formData.expiryDate || 
-        !formData.pickupLocation.trim()) {
+    if (
+      !formData.foodType.trim() ||
+      !formData.quantity.trim() ||
+      !formData.description.trim() ||
+      !formData.expiryDate ||
+      !formData.pickupLocation.trim()
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
       const uploadedImageUrls = [];
-  
+
       if (images.length > 0) {
         for (const image of images) {
           try {
-            console.log('Uploading image:', image.name, image.type, image.size);
-            
+            console.log("Uploading image:", image.name, image.type, image.size);
+
             const formData = new FormData();
-            formData.append('image', image); 
-            const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:9900';
-            const uploadUrl = `${backendUrl}/api/upload/image`;
-            
-            console.log('Uploading to:', uploadUrl);
-            
+            formData.append("image", image);
+            const backendUrl =
+              import.meta.env.VITE_API_URL || "http://localhost:9900";
+            const cleanBackendUrl = backendUrl.endsWith("/api")
+              ? backendUrl.slice(0, -4)
+              : backendUrl;
+            const uploadUrl = `${cleanBackendUrl}/api/upload/image`;
+
+            console.log("Uploading to:", uploadUrl);
+
             const res = await fetch(uploadUrl, {
-              method: 'POST',
+              method: "POST",
               body: formData,
             });
-  
-            console.log('Upload response status:', res.status);
-  
+
+            console.log("Upload response status:", res.status);
+
             if (!res.ok) {
               const errorText = await res.text();
-              console.error('Upload failed response:', errorText);
+              console.error("Upload failed response:", errorText);
               throw new Error(`Upload failed: ${res.status} - ${errorText}`);
             }
-  
+
             const data = await res.json();
-            console.log('Upload response data:', data);
-            
+            console.log("Upload response data:", data);
+
             if (!data.imageUrl) {
-              throw new Error('No image URL returned from server');
+              throw new Error("No image URL returned from server");
             }
-            
+
             uploadedImageUrls.push(data.imageUrl);
-            console.log('Image uploaded successfully:', data.imageUrl);
+            console.log("Image uploaded successfully:", data.imageUrl);
             toast.success(`Uploaded ${image.name} successfully`);
-            
           } catch (imageError) {
-            console.error('Failed to upload image:', imageError);
-            toast.error(`Failed to upload ${image.name}: ${imageError.message}`);
+            console.error("Failed to upload image:", imageError);
+            toast.error(
+              `Failed to upload ${image.name}: ${imageError.message}`
+            );
           }
         }
       }
       if (images.length > 0 && uploadedImageUrls.length === 0) {
-        toast.error('No images were uploaded successfully. Continuing without images.');
+        toast.error(
+          "No images were uploaded successfully. Continuing without images."
+        );
       }
       const donationData = {
         ...formData,
         donorId: user?.id,
         images: uploadedImageUrls,
-        status: 'available',
+        status: "available",
         createdAt: new Date().toISOString(),
       };
-  
-      console.log('Submitting donation with images:', uploadedImageUrls);
+
+      console.log("Submitting donation with images:", uploadedImageUrls);
       await donationAPI.create(donationData);
-  
-      toast.success('Donation created successfully!');
+
+      toast.success("Donation created successfully!");
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -378,10 +389,9 @@ const FoodListingForm = ({ onSuccess }) => {
         setImages([]);
         setCurrentStep(1);
       }, 2000);
-  
     } catch (err) {
-      console.error('Submission error:', err);
-      toast.error(err.message || 'Error creating donation');
+      console.error("Submission error:", err);
+      toast.error(err.message || "Error creating donation");
     } finally {
       setLoading(false);
     }
