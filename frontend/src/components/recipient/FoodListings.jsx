@@ -160,8 +160,6 @@ const FoodListings = () => {
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-            
-            {/* Stats Loading */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="bg-white rounded-2xl p-6 border border-gray-200">
@@ -212,8 +210,6 @@ const FoodListings = () => {
               </button>
             </div>
           </div>
-
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
               <div className="flex items-center justify-between">

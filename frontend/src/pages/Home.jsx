@@ -92,7 +92,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-50 via-white to-green-50 py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]"></div>
         <div className="absolute top-0 left-0 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -115,7 +114,7 @@ const Home = () => {
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
-                to="/donor"
+                to="/donor/dashboard"
                 className="group bg-gradient-to-r from-blue-600 to-blue-700 text-white px-10 py-5 rounded-2xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 shadow-lg"
               >
                 <span className="flex items-center justify-center gap-3">
@@ -126,7 +125,7 @@ const Home = () => {
                 </span>
               </Link>
               <Link
-                to="/recipient"
+                to="/recipient/dashboard"
                 className="group border-2 border-gray-300 text-gray-700 px-10 py-5 rounded-2xl font-semibold hover:border-blue-500 hover:text-blue-600 transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
               >
                 <span className="flex items-center justify-center gap-3">
@@ -270,7 +269,7 @@ const Home = () => {
                 to="/recipient" 
                 className="group inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-12 py-5 rounded-2xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 shadow-lg"
               >
-                <span className="flex items-center gap-3">
+                <span className="flex it ems-center gap-3">
                   Find Food Now
                   <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

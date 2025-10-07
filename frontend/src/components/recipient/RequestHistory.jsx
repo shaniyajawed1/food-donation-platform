@@ -29,7 +29,7 @@ export default function RequestHistory() {
     }
     try {
       setLoading(true);
-      const response = await requestAPI.getMyRequests(user.id);
+      const response = await requestAPI.getMyRequests();
       setRequests(response.data || []);
     } catch (error) {
       console.error("Failed to load request history:", error);
@@ -57,9 +57,9 @@ export default function RequestHistory() {
     if (!requestToDelete) return;
 
     try {
-      setDeletingId(requestToDelete.id);
-      await requestAPI.delete(requestToDelete.id);
-      setRequests((prev) => prev.filter((req) => req.id !== requestToDelete.id));
+      setDeletingId(requestToDelete._id);
+      await requestAPI.delete(requestToDelete._id);
+      setRequests((prev) => prev.filter((req) => req._id !== requestToDelete._id));
       toast.success("Request deleted successfully!");
     } catch (error) {
       console.error("Failed to delete request:", error);
@@ -198,8 +198,6 @@ export default function RequestHistory() {
               Find More Food
             </Link>
           </div>
-
-          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-white rounded-xl p-4 border border-emerald-100 text-center shadow-sm">
               <div className="text-2xl font-serif font-normal text-emerald-900 mb-1">
@@ -252,8 +250,6 @@ export default function RequestHistory() {
             </div>
           </div>
         </div>
-
-        {/* Requests Grid */}
         {filteredRequests.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-emerald-200">
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -282,7 +278,7 @@ export default function RequestHistory() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredRequests.map((request) => (
               <div
-                key={request.id}
+                key={request._id}
                 className="bg-white rounded-xl border border-emerald-100 p-6 hover:shadow-lg transition-all duration-200"
               >
                 <div className="flex items-start justify-between mb-4">

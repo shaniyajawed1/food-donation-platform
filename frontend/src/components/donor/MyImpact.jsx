@@ -9,15 +9,17 @@ export default function MyImpact() {
     totalDonations: 0,
     completedDonations: 0,
     activeDonations: 0,
+    reservedDonations: 0,
     mealsProvided: 0,
-    co2Reduced: 0, 
-    waterSaved: 0, 
-    moneySaved: 0, 
+    co2Reduced: 0,
+    waterSaved: 0,
+    moneySaved: 0,
     peopleHelped: 0
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [timeframe, setTimeframe] = useState("all"); 
+  const [error, setError] = useState(null);
+  const [timeframe, setTimeframe] = useState("all");
 
   useEffect(() => {
     if (user) {
@@ -28,62 +30,128 @@ export default function MyImpact() {
   const loadImpactData = async () => {
     try {
       setLoading(true);
-      const response = await donationAPI.getMyDonations();
-      const donations = response.data;
+      setError(null);
+      console.log("Loading impact data for user:", user?.id);
       
+      const response = await donationAPI.getMyDonations();
+      console.log("API Response:", response);
+      
+      const donations = response?.data || [];
+      console.log("Donations found:", donations.length);
+      
+      if (donations.length === 0) {
+        console.log("No donations found for user");
+      }
+
       calculateImpact(donations);
       loadRecentActivity(donations);
+      
     } catch (error) {
       console.error("Error loading impact data:", error);
+      setError("Failed to load your impact data. Please try again later.");
+      
+      // Fallback demo data for development
+      setImpactData({
+        totalDonations: 8,
+        completedDonations: 5,
+        activeDonations: 2,
+        reservedDonations: 1,
+        mealsProvided: 42,
+        co2Reduced: 105,
+        waterSaved: 42000,
+        moneySaved: 336,
+        peopleHelped: 15
+      });
+      
+      setRecentActivity([
+        {
+          id: "demo1",
+          foodType: "Fresh Vegetables",
+          quantity: "5 kg",
+          date: new Date().toISOString(),
+          status: "completed",
+          recipient: "Community Shelter"
+        },
+        {
+          id: "demo2",
+          foodType: "Bakery Items",
+          quantity: "3 kg", 
+          date: new Date(Date.now() - 86400000).toISOString(),
+          status: "completed",
+          recipient: "Local Food Bank"
+        }
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   const calculateImpact = (donations) => {
+    console.log("Calculating impact from donations:", donations);
+    
     const completedDonations = donations.filter(d => d.status === 'completed');
-    const activeDonations = donations.filter(d => d.status === 'available' || d.status === 'claimed');
+    const activeDonations = donations.filter(d => d.status === 'available');
+    const reservedDonations = donations.filter(d => d.status === 'reserved');
+
     const mealsProvided = completedDonations.reduce((total, donation) => {
-      const quantityMatch = donation.quantity.match(/\d+/);
-      const quantity = quantityMatch ? parseInt(quantityMatch[0]) : 0;
+      const quantity = extractQuantity(donation.quantity);
       return total + quantity;
     }, 0);
     const co2Reduced = mealsProvided * 2.5; 
     const waterSaved = mealsProvided * 1000; 
-    const moneySaved = mealsProvided * 8; 
+    const moneySaved = mealsProvided * 8;
     const peopleHelped = completedDonations.length * 3; 
 
-    setImpactData({
+    const newImpactData = {
       totalDonations: donations.length,
       completedDonations: completedDonations.length,
       activeDonations: activeDonations.length,
+      reservedDonations: reservedDonations.length,
       mealsProvided,
       co2Reduced: Math.round(co2Reduced),
       waterSaved: Math.round(waterSaved),
       moneySaved: Math.round(moneySaved),
       peopleHelped
-    });
+    };
+
+    console.log("Calculated impact data:", newImpactData);
+    setImpactData(newImpactData);
+  };
+  const extractQuantity = (quantityString) => {
+    if (!quantityString) return 1;
+    
+    const match = quantityString.match(/\d+/);
+    return match ? parseInt(match[0]) : 1;
   };
 
   const loadRecentActivity = (donations) => {
     const recent = donations
-      .filter(d => d.status === 'completed')
+      .filter(d => d.status === 'completed' || d.status === 'reserved')
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5)
       .map(donation => ({
         id: donation._id,
         foodType: donation.foodType,
         quantity: donation.quantity,
         date: donation.createdAt,
-        recipient: donation.recipient?.name || 'Anonymous',
+        status: donation.status,
+        recipient: getRecipientName(donation),
         impact: calculateDonationImpact(donation)
       }));
-    
+
+    console.log("Recent activity:", recent);
     setRecentActivity(recent);
   };
 
+  const getRecipientName = (donation) => {
+    if (donation.status === 'completed' && donation.recipient) {
+      return donation.recipient.name || 'Community Member';
+    }
+    return donation.status === 'reserved' ? 'Pending Pickup' : 'Available';
+  };
+
   const calculateDonationImpact = (donation) => {
-    const quantityMatch = donation.quantity.match(/\d+/);
-    const quantity = quantityMatch ? parseInt(quantityMatch[0]) : 0;
+    const quantity = extractQuantity(donation.quantity);
     return {
       meals: quantity,
       co2: quantity * 2.5,
@@ -92,6 +160,9 @@ export default function MyImpact() {
   };
 
   const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    }
     if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'k';
     }
@@ -99,33 +170,49 @@ export default function MyImpact() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Recent';
+    }
   };
 
-  const getTimeframeText = () => {
-    switch (timeframe) {
-      case 'month': return 'this month';
-      case 'year': return 'this year';
-      default: return 'all time';
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed': return 'text-green-600 bg-green-100';
+      case 'reserved': return 'text-blue-600 bg-blue-100';
+      case 'available': return 'text-orange-600 bg-orange-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'completed': return 'Delivered';
+      case 'reserved': return 'Reserved';
+      case 'available': return 'Available';
+      default: return status;
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50/30 py-8">
-        <div className="max-w-7xl mx-auto px-6">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-slate-200 rounded w-1/4 mb-4"></div>
-            <div className="h-4 bg-slate-200 rounded w-1/2 mb-12"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-96 mb-12"></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white rounded-xl p-6 border border-slate-200">
-                  <div className="h-10 bg-slate-200 rounded w-10 mb-4"></div>
-                  <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-6 bg-slate-200 rounded w-1/3"></div>
+                <div key={i} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="h-12 bg-gray-200 rounded w-12 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
                 </div>
               ))}
             </div>
@@ -136,333 +223,311 @@ export default function MyImpact() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50/30 py-8">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-serif font-normal text-slate-900 tracking-tight">
-                My Impact
-              </h1>
-              <p className="text-slate-600 font-light mt-2">
-                See the difference you're making in your community and the environment
+              <h1 className="text-3xl font-bold text-gray-900">My Impact</h1>
+              <p className="text-gray-600 mt-2">
+                Track your food donations and environmental impact
               </p>
             </div>
+            
             <div className="flex items-center gap-4 mt-4 lg:mt-0">
               <select
                 value={timeframe}
                 onChange={(e) => setTimeframe(e.target.value)}
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors bg-white"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
               >
                 <option value="all">All Time</option>
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
               </select>
+              
               <Link
                 to="/donor/dashboard"
-                className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-all duration-300 shadow-sm hover:shadow-md"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors shadow-sm"
               >
                 + New Donation
               </Link>
             </div>
           </div>
+          {error && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <p className="text-yellow-700">{error}</p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center text-white shadow-sm">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                 </div>
               </div>
               <div>
-                <p className="text-slate-600 text-sm font-light mb-1">Meals Provided</p>
-                <p className="text-3xl font-serif font-normal text-slate-900 mb-2">
-                  {formatNumber(impactData.mealsProvided)}
-                </p>
-                <p className="text-xs text-slate-500">
-                  Enough to feed {Math.ceil(impactData.mealsProvided / 3)} people for a day
-                </p>
+                <p className="text-gray-600 text-sm font-medium mb-1">Total Donations</p>
+                <p className="text-3xl font-bold text-gray-900 mb-2">{impactData.totalDonations}</p>
+                <p className="text-xs text-gray-500">All your contributions</p>
               </div>
             </div>
-
-            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-sm">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                   </svg>
                 </div>
               </div>
               <div>
-                <p className="text-slate-600 text-sm font-light mb-1">CO₂ Reduced</p>
-                <p className="text-3xl font-serif font-normal text-slate-900 mb-2">
-                  {formatNumber(impactData.co2Reduced)}kg
-                </p>
-                <p className="text-xs text-slate-500">
-                  Equivalent to {Math.round(impactData.co2Reduced / 8)} car days
-                </p>
+                <p className="text-gray-600 text-sm font-medium mb-1">Meals Provided</p>
+                <p className="text-3xl font-bold text-gray-900 mb-2">{formatNumber(impactData.mealsProvided)}</p>
+                <p className="text-xs text-gray-500">Approximate meals saved</p>
               </div>
             </div>
-
-            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center text-white shadow-sm">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
               </div>
               <div>
-                <p className="text-slate-600 text-sm font-light mb-1">Water Saved</p>
-                <p className="text-3xl font-serif font-normal text-slate-900 mb-2">
-                  {formatNumber(impactData.waterSaved)}L
-                </p>
-                <p className="text-xs text-slate-500">
-                  Enough for {Math.round(impactData.waterSaved / 150)} person-months
-                </p>
+                <p className="text-gray-600 text-sm font-medium mb-1">CO₂ Reduced</p>
+                <p className="text-3xl font-bold text-gray-900 mb-2">{formatNumber(impactData.co2Reduced)}kg</p>
+                <p className="text-xs text-gray-500">Carbon footprint saved</p>
               </div>
             </div>
-
-            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl flex items-center justify-center text-white shadow-sm">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
               </div>
               <div>
-                <p className="text-slate-600 text-sm font-light mb-1">Value Created</p>
-                <p className="text-3xl font-serif font-normal text-slate-900 mb-2">
-                  ${formatNumber(impactData.moneySaved)}
-                </p>
-                <p className="text-xs text-slate-500">
-                  Economic value of food rescued
-                </p>
+                <p className="text-gray-600 text-sm font-medium mb-1">People Helped</p>
+                <p className="text-3xl font-bold text-gray-900 mb-2">{impactData.peopleHelped}</p>
+                <p className="text-xs text-gray-500">Community members supported</p>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          <div className="xl:col-span-2">
-            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-8">
-              <h3 className="text-xl font-serif font-normal text-slate-900 mb-6">
-                Your Donation Journey
-              </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Donation Status</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                  <div className="text-2xl font-serif font-normal text-emerald-600 mb-2">
-                    {impactData.totalDonations}
-                  </div>
-                  <div className="text-sm text-emerald-700 font-medium">Total Donations</div>
-                  <div className="text-xs text-emerald-600 mt-1">All time contributions</div>
-                </div>
-                
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-2xl font-serif font-normal text-blue-600 mb-2">
+                  <div className="text-2xl font-bold text-blue-600 mb-2">
                     {impactData.completedDonations}
                   </div>
-                  <div className="text-sm text-blue-700 font-medium">Successfully Delivered</div>
-                  <div className="text-xs text-blue-600 mt-1">Made a direct impact</div>
+                  <div className="text-sm font-medium text-blue-700">Completed</div>
+                  <div className="text-xs text-blue-600 mt-1">Successfully delivered</div>
                 </div>
                 
-                <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="text-2xl font-serif font-normal text-purple-600 mb-2">
-                    {impactData.peopleHelped}
+                <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="text-2xl font-bold text-orange-600 mb-2">
+                    {impactData.reservedDonations}
                   </div>
-                  <div className="text-sm text-purple-700 font-medium">People Helped</div>
-                  <div className="text-xs text-purple-600 mt-1">Lives touched</div>
+                  <div className="text-sm font-medium text-orange-700">Reserved</div>
+                  <div className="text-xs text-orange-600 mt-1">Awaiting pickup</div>
+                </div>
+                
+                <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-2xl font-bold text-green-600 mb-2">
+                    {impactData.activeDonations}
+                  </div>
+                  <div className="text-sm font-medium text-green-700">Available</div>
+                  <div className="text-xs text-green-600 mt-1">Ready for donation</div>
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                <h4 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  Environmental Impact
-                </h4>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Environmental Impact</h3>
+              
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Food Waste Prevented</span>
+                    <span>{impactData.mealsProvided} meals</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-green-500 h-3 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min(100, (impactData.mealsProvided / 100) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
                 
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm text-slate-600 mb-2">
-                      <span>Carbon Footprint Reduced</span>
-                      <span>{impactData.co2Reduced} kg CO₂</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div 
-                        className="bg-emerald-500 h-2 rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.min(100, (impactData.co2Reduced / 500) * 100)}%` }}
-                      ></div>
-                    </div>
+                <div>
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Carbon Emissions Reduced</span>
+                    <span>{impactData.co2Reduced} kg CO₂</span>
                   </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm text-slate-600 mb-2">
-                      <span>Water Conservation</span>
-                      <span>{formatNumber(impactData.waterSaved)} liters</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.min(100, (impactData.waterSaved / 10000) * 100)}%` }}
-                      ></div>
-                    </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-purple-500 h-3 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min(100, (impactData.co2Reduced / 250) * 100)}%` }}
+                    ></div>
                   </div>
-                  
-                  <div>
-                    <div className="flex justify-between text-sm text-slate-600 mb-2">
-                      <span>Food Waste Prevented</span>
-                      <span>{impactData.mealsProvided} meals</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div 
-                        className="bg-amber-500 h-2 rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.min(100, (impactData.mealsProvided / 200) * 100)}%` }}
-                      ></div>
-                    </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Water Conservation</span>
+                    <span>{formatNumber(impactData.waterSaved)} liters</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-500 h-3 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min(100, (impactData.waterSaved / 50000) * 100)}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-              <h3 className="text-xl font-serif font-normal text-slate-900 mb-6">
-                Your Impact in Perspective
-              </h3>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Your Impact Equals</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <span className="text-emerald-600 text-lg">🌍</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-emerald-900">Carbon Impact</div>
-                      <div className="text-sm text-emerald-700">
-                        Equivalent to planting {Math.round(impactData.co2Reduced / 21)} trees
-                      </div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">🌳</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-green-900">Planting {Math.round(impactData.co2Reduced / 21)} Trees</div>
+                    <div className="text-sm text-green-700">Carbon offset equivalent</div>
                   </div>
                 </div>
                 
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <span className="text-blue-600 text-lg">💧</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-blue-900">Water Impact</div>
-                      <div className="text-sm text-blue-700">
-                        Enough for {Math.round(impactData.waterSaved / 5000)} months of showers
-                      </div>
-                    </div>
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">💧</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-blue-900">Saving {Math.round(impactData.waterSaved / 1000)}k Liters</div>
+                    <div className="text-sm text-blue-700">Water conservation</div>
                   </div>
                 </div>
                 
-                <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                      <span className="text-amber-600 text-lg">🚗</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-amber-900">Travel Impact</div>
-                      <div className="text-sm text-amber-700">
-                        Equal to {Math.round(impactData.co2Reduced / 8)} car-free days
-                      </div>
-                    </div>
+                <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">🚗</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-orange-900">{Math.round(impactData.co2Reduced / 8)} Car Days</div>
+                    <div className="text-sm text-orange-700">Emissions saved</div>
                   </div>
                 </div>
                 
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <span className="text-purple-600 text-lg">👥</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-purple-900">Community Impact</div>
-                      <div className="text-sm text-purple-700">
-                        Helped {impactData.peopleHelped} neighbors in need
-                      </div>
-                    </div>
+                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">🏠</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-purple-900">{impactData.peopleHelped} Families</div>
+                    <div className="text-sm text-purple-700">Meals provided</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="xl:col-span-1">
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <h3 className="font-serif font-normal text-slate-900 text-lg mb-4">
-                  Recent Impact
-                </h3>
-                <div className="space-y-4">
-                  {recentActivity.length > 0 ? (
-                    recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors duration-200">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-emerald-600 text-sm">✓</span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-slate-900 text-sm">
+          <div className="space-y-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+              
+              <div className="space-y-4">
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getStatusColor(activity.status)}`}>
+                        <span className="text-xs font-medium">
+                          {activity.status === 'completed' ? '✓' : '⏱'}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="font-medium text-gray-900 text-sm truncate">
                             {activity.foodType}
                           </div>
-                          <div className="text-xs text-slate-500 mb-1">
-                            {activity.quantity} • {formatDate(activity.date)}
-                          </div>
-                          <div className="text-xs text-emerald-600">
-                            Provided {activity.impact.meals} meals to {activity.recipient}
-                          </div>
+                          <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(activity.status)}`}>
+                            {getStatusText(activity.status)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          {activity.quantity} • {formatDate(activity.date)}
+                        </div>
+                        <div className="text-xs text-green-600">
+                          {activity.status === 'completed' 
+                            ? `Provided ${activity.impact.meals} meals to ${activity.recipient}`
+                            : `Reserved for ${activity.recipient}`
+                          }
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4">
-                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                      </div>
-                      <p className="text-slate-500 text-sm">No completed donations yet</p>
-                      <p className="text-slate-400 text-xs mt-1">Your impact will appear here</p>
                     </div>
-                  )}
-                </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 text-sm">No recent activity</p>
+                    <p className="text-gray-400 text-xs mt-1">Your donations will appear here</p>
+                  </div>
+                )}
               </div>
-              <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl p-6 text-white">
-                <h3 className="font-serif font-normal text-lg mb-3">
-                  Share Your Impact
-                </h3>
-                <p className="text-emerald-100 text-sm mb-4">
-                  Inspire others by sharing how you're making a difference in your community.
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Next Milestone</h3>
+              
+              <div className="text-center">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl">🎯</span>
+                </div>
+                
+                <div className="font-semibold text-gray-900 mb-2">
+                  {Math.max(0, 10 - impactData.completedDonations)} to 10 Deliveries
+                </div>
+                
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                  <div 
+                    className="bg-yellow-500 h-3 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (impactData.completedDonations / 10) * 100)}%` }}
+                  ></div>
+                </div>
+                
+                <p className="text-gray-600 text-sm">
+                  {impactData.completedDonations} of 10 completed donations
                 </p>
-                <button className="w-full bg-white text-emerald-600 font-semibold py-2 rounded-lg hover:bg-emerald-50 transition-colors duration-300">
-                  Share My Story
-                </button>
+                
+                {impactData.completedDonations >= 10 && (
+                  <div className="mt-3 p-2 bg-green-50 rounded-lg border border-green-200">
+                    <p className="text-green-700 text-sm font-medium">🎉 Milestone achieved!</p>
+                  </div>
+                )}
               </div>
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <h3 className="font-serif font-normal text-slate-900 text-lg mb-4">
-                  Next Milestone
-                </h3>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-amber-600 text-2xl">🎯</span>
-                  </div>
-                  <div className="font-semibold text-slate-900 mb-2">
-                    {50 - impactData.completedDonations} to 50 Deliveries
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 mb-3">
-                    <div 
-                      className="bg-amber-500 h-2 rounded-full transition-all duration-1000"
-                      style={{ width: `${(impactData.completedDonations / 50) * 100}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-slate-600 text-sm">
-                    {impactData.completedDonations} of 50 completed donations
-                  </p>
-                </div>
-              </div>
+            </div>
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg p-6 text-white">
+              <h3 className="font-semibold text-lg mb-3">Share Your Impact</h3>
+              <p className="text-green-100 text-sm mb-4">
+                Inspire others by sharing your food rescue journey and environmental impact.
+              </p>
+              <button className="w-full bg-white text-green-600 font-semibold py-2 rounded-lg hover:bg-green-50 transition-colors">
+                Share My Story
+              </button>
             </div>
           </div>
         </div>

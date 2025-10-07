@@ -122,17 +122,41 @@ export default function MyDonations() {
   const getStatusIcon = (status) => {
     switch (status) {
       case "available":
-        return "🟢";
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        );
       case "reserved":
-        return "🟡";
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
       case "claimed":
-        return "🔵";
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
       case "completed":
-        return "🟣";
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
       case "cancelled":
-        return "🔴";
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        );
       default:
-        return "⚪";
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        );
     }
   };
 
@@ -334,11 +358,12 @@ export default function MyDonations() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span
-                          className={`px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusColor(
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusColor(
                             donation.status
                           )}`}
                         >
-                          {getStatusIcon(donation.status)} {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                          {getStatusIcon(donation.status)}
+                          {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
                         </span>
                         <button
                           onClick={() => handleDeleteClick(donation)}
@@ -435,7 +460,12 @@ export default function MyDonations() {
                         </div>
                         <p className="text-blue-800 text-sm">{donation.recipient.name}</p>
                         {donation.recipient.phone && (
-                          <p className="text-blue-700 text-sm mt-1">📞 {donation.recipient.phone}</p>
+                          <div className="flex items-center gap-1 text-blue-700 text-sm mt-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            {donation.recipient.phone}
+                          </div>
                         )}
                       </div>
                     )}
