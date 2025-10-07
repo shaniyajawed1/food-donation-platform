@@ -313,12 +313,13 @@ const FoodListingForm = ({ onSuccess }) => {
             const formData = new FormData();
             formData.append('image', image); 
   
-            console.log('FormData entries:');
-            for (let [key, value] of formData.entries()) {
-              console.log(key, value);
-            }
-            const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:9900/api';
-            const res = await fetch(`${backendUrl}/upload/image`, {
+            // ✅ FIX: Handle both cases properly
+            const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:9900';
+            const uploadUrl = `${backendUrl}/api/upload/image`;
+            
+            console.log('Uploading to:', uploadUrl);
+            
+            const res = await fetch(uploadUrl, {
               method: 'POST',
               body: formData,
             });
