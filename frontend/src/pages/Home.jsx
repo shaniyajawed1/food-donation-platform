@@ -197,7 +197,7 @@ const Home = () => {
     <div className="min-h-screen bg-white">
       <section className="relative h-[90vh] w-full overflow-hidden flex items-center justify-center">
         <img
-          src="./uploads/pexels-cottonbro-6591147.jpg"
+          src="https://images.pexels.com/photos/6591147/pexels-photo-6591147.jpeg"
           alt="Volunteers packing food"
           className="absolute inset-0 w-full h-full object-cover"
         />
