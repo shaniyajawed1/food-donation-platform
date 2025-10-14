@@ -16,6 +16,7 @@ import MyImpact from "./components/donor/MyImpact";
 import FindFood from "./components/recipient/FindFood";
 import FoodListingDetails from "./components/recipient/FoodListingDetails";
 import MyRequests from "./components/recipient/MyRequests";
+import DonationMap from "./components/recipient/DonationMap";
 function App() {
   return (
     <AuthProvider>
@@ -79,6 +80,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/donor/impact" element={<MyImpact />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/recipient/map" element={<DonationMap/>}/>
               <Route path="/recipient/requests" element={<MyRequests />} />
               <Route path="/contact" element={<Contact />} />
             </Routes>
