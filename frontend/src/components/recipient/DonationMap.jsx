@@ -24,6 +24,7 @@ export default function DonationMap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const [geocodingProgress, setGeocodingProgress] = useState(0);
   const defaultCenter = [28.6139, 77.2090]; 
 
   useEffect(() => {
@@ -34,16 +35,15 @@ export default function DonationMap() {
   const fetchDonations = async () => {
     try {
       setLoading(true);
+      setError("");
       const response = await donationAPI.getAll();
       
       if (response.data) {
-        const donationsWithCoords = response.data
-          .filter(donation => donation.status === 'available')
-          .map(donation => ({
-            ...donation,
-            coordinates: geocodeLocation(donation.pickupLocation)
-          }));
+        const availableDonations = response.data.filter(donation => donation.status === 'available');
+        console.log("Available donations:", availableDonations);
         
+        // Geocode all donations with proper addresses
+        const donationsWithCoords = await geocodeAllDonations(availableDonations);
         setDonations(donationsWithCoords);
       }
     } catch (err) {
@@ -72,22 +72,118 @@ export default function DonationMap() {
       setUserLocation(defaultCenter);
     }
   };
-  const geocodeLocation = (location) => {
+
+  const geocodeAllDonations = async (donations) => {
+    setGeocodingProgress(0);
+    const results = [];
+    
+    for (let i = 0; i < donations.length; i++) {
+      const donation = donations[i];
+      try {
+        const coordinates = await geocodeLocation(donation.pickupLocation);
+        results.push({
+          ...donation,
+          coordinates: coordinates,
+          originalAddress: donation.pickupLocation // Keep original address for display
+        });
+      } catch (error) {
+        console.warn(`Failed to geocode: ${donation.pickupLocation}`, error);
+        // Fallback to default location with some randomization
+        results.push({
+          ...donation,
+          coordinates: [
+            defaultCenter[0] + (Math.random() - 0.5) * 0.1,
+            defaultCenter[1] + (Math.random() - 0.5) * 0.1
+          ],
+          originalAddress: donation.pickupLocation,
+          geocodeFailed: true
+        });
+      }
+      
+      // Update progress
+      setGeocodingProgress(Math.round(((i + 1) / donations.length) * 100));
+    }
+    
+    setGeocodingProgress(100);
+    return results;
+  };
+
+  const geocodeLocation = async (address) => {
+    // First check if we have coordinates directly in the donation data
+    if (address.coordinates && Array.isArray(address.coordinates) && address.coordinates.length === 2) {
+      return address.coordinates;
+    }
+
+    // If address is an object with lat/lng, use that
+    if (address.latitude && address.longitude) {
+      return [address.latitude, address.longitude];
+    }
+
+    // If address is a string, try to geocode it
+    if (typeof address === 'string') {
+      // Try OpenStreetMap Nominatim API for geocoding
+      const formattedAddress = encodeURIComponent(address.trim());
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${formattedAddress}&limit=1`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+      }
+      
+      // Fallback to simple city-based geocoding
+      return geocodeFallback(address);
+    }
+
+    // Final fallback
+    return defaultCenter;
+  };
+
+  const geocodeFallback = (address) => {
     const locationMap = {
       'delhi': [28.6139, 77.2090],
+      'new delhi': [28.6139, 77.2090],
       'mumbai': [19.0760, 72.8777],
       'bangalore': [12.9716, 77.5946],
+      'bengaluru': [12.9716, 77.5946],
       'chennai': [13.0827, 80.2707],
       'kolkata': [22.5726, 88.3639],
       'hyderabad': [17.3850, 78.4867],
+      'pune': [18.5204, 73.8567],
+      'ahmedabad': [23.0225, 72.5714],
+      'jaipur': [26.9124, 75.7873],
+      'surat': [21.1702, 72.8311],
+      'lucknow': [26.8467, 80.9462],
+      'kanpur': [26.4499, 80.3319],
+      'nagpur': [21.1458, 79.0882],
+      'indore': [22.7196, 75.8577],
+      'thane': [19.2183, 72.9781],
+      'bhopal': [23.2599, 77.4126],
+      'visakhapatnam': [17.6868, 83.2185],
+      'patna': [25.5941, 85.1376],
     };
 
-    const lowerLocation = location.toLowerCase();
+    const lowerAddress = address.toLowerCase();
+    
+    // Try exact matches first
     for (const [key, coords] of Object.entries(locationMap)) {
-      if (lowerLocation.includes(key)) {
+      if (lowerAddress === key || lowerAddress.includes(key)) {
         return coords;
       }
     }
+
+    // Try partial matches
+    for (const [key, coords] of Object.entries(locationMap)) {
+      if (lowerAddress.includes(key)) {
+        return coords;
+      }
+    }
+
+    // If no match found, return default center with some randomization
+    console.warn(`No geocoding match found for: ${address}`);
     return [
       defaultCenter[0] + (Math.random() - 0.5) * 0.1,
       defaultCenter[1] + (Math.random() - 0.5) * 0.1
@@ -110,6 +206,19 @@ export default function DonationMap() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading donation map...</p>
+            {geocodingProgress > 0 && (
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${geocodingProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Geocoding locations... {geocodingProgress}%
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -141,6 +250,7 @@ export default function DonationMap() {
             </div>
           </div>
         )}
+
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
             <div>
@@ -167,6 +277,7 @@ export default function DonationMap() {
             </div>
           </div>
         </div>
+
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden">
           <div className="h-96 md:h-[500px] lg:h-[600px]">
             {userLocation && (
@@ -180,6 +291,8 @@ export default function DonationMap() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                
+                {/* User location marker */}
                 <Marker position={userLocation}>
                   <Popup>
                     <div className="text-center">
@@ -188,6 +301,8 @@ export default function DonationMap() {
                     </div>
                   </Popup>
                 </Marker>
+
+                {/* Donation markers */}
                 {donations.map((donation, index) => (
                   <Marker
                     key={donation._id || index}
@@ -222,10 +337,22 @@ export default function DonationMap() {
                             </div>
                           )}
 
-                          {donation.pickupLocation && (
+                          <div>
+                            <span className="text-gray-600 block mb-1">Pickup Location:</span>
+                            <span className="font-medium text-sm">
+                              {donation.originalAddress || donation.pickupLocation}
+                            </span>
+                            {donation.geocodeFailed && (
+                              <p className="text-xs text-yellow-600 mt-1">
+                                * Approximate location
+                              </p>
+                            )}
+                          </div>
+
+                          {donation.description && (
                             <div>
-                              <span className="text-gray-600 block mb-1">Location:</span>
-                              <span className="font-medium text-sm">{donation.pickupLocation}</span>
+                              <span className="text-gray-600 block mb-1">Description:</span>
+                              <span className="text-sm">{donation.description}</span>
                             </div>
                           )}
                         </div>
@@ -248,6 +375,7 @@ export default function DonationMap() {
             )}
           </div>
         </div>
+
         <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
           <h3 className="font-semibold text-gray-900 mb-4">Map Legend</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -265,6 +393,7 @@ export default function DonationMap() {
             </div>
           </div>
         </div>
+
         <div className="text-center mt-8">
           <button
             onClick={fetchDonations}
