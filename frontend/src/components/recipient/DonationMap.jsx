@@ -41,8 +41,6 @@ export default function DonationMap() {
       if (response.data) {
         const availableDonations = response.data.filter(donation => donation.status === 'available');
         console.log("Available donations:", availableDonations);
-        
-        // Geocode all donations with proper addresses
         const donationsWithCoords = await geocodeAllDonations(availableDonations);
         setDonations(donationsWithCoords);
       }
@@ -84,11 +82,10 @@ export default function DonationMap() {
         results.push({
           ...donation,
           coordinates: coordinates,
-          originalAddress: donation.pickupLocation // Keep original address for display
+          originalAddress: donation.pickupLocation 
         });
       } catch (error) {
         console.warn(`Failed to geocode: ${donation.pickupLocation}`, error);
-        // Fallback to default location with some randomization
         results.push({
           ...donation,
           coordinates: [
@@ -99,8 +96,6 @@ export default function DonationMap() {
           geocodeFailed: true
         });
       }
-      
-      // Update progress
       setGeocodingProgress(Math.round(((i + 1) / donations.length) * 100));
     }
     
@@ -109,19 +104,13 @@ export default function DonationMap() {
   };
 
   const geocodeLocation = async (address) => {
-    // First check if we have coordinates directly in the donation data
     if (address.coordinates && Array.isArray(address.coordinates) && address.coordinates.length === 2) {
       return address.coordinates;
     }
-
-    // If address is an object with lat/lng, use that
     if (address.latitude && address.longitude) {
       return [address.latitude, address.longitude];
     }
-
-    // If address is a string, try to geocode it
     if (typeof address === 'string') {
-      // Try OpenStreetMap Nominatim API for geocoding
       const formattedAddress = encodeURIComponent(address.trim());
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${formattedAddress}&limit=1`
@@ -133,12 +122,8 @@ export default function DonationMap() {
           return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
         }
       }
-      
-      // Fallback to simple city-based geocoding
       return geocodeFallback(address);
     }
-
-    // Final fallback
     return defaultCenter;
   };
 
@@ -167,22 +152,16 @@ export default function DonationMap() {
     };
 
     const lowerAddress = address.toLowerCase();
-    
-    // Try exact matches first
     for (const [key, coords] of Object.entries(locationMap)) {
       if (lowerAddress === key || lowerAddress.includes(key)) {
         return coords;
       }
     }
-
-    // Try partial matches
     for (const [key, coords] of Object.entries(locationMap)) {
       if (lowerAddress.includes(key)) {
         return coords;
       }
     }
-
-    // If no match found, return default center with some randomization
     console.warn(`No geocoding match found for: ${address}`);
     return [
       defaultCenter[0] + (Math.random() - 0.5) * 0.1,
@@ -291,8 +270,6 @@ export default function DonationMap() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                
-                {/* User location marker */}
                 <Marker position={userLocation}>
                   <Popup>
                     <div className="text-center">
@@ -301,8 +278,6 @@ export default function DonationMap() {
                     </div>
                   </Popup>
                 </Marker>
-
-                {/* Donation markers */}
                 {donations.map((donation, index) => (
                   <Marker
                     key={donation._id || index}
