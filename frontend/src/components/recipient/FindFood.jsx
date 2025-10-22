@@ -52,6 +52,7 @@ export default function FindFood() {
       setLoading(false);
     }
   };
+
   const getImageUrl = (listing) => {
     if (listing.images && listing.images.length > 0) {
       return listing.images[0];
@@ -62,13 +63,34 @@ export default function FindFood() {
     return null;
   };
 
+  const getDaysUntilExpiry = (expiryDate) => {
+    if (!expiryDate) return null;
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    // Reset time part to compare only dates
+    today.setHours(0, 0, 0, 0);
+    expiry.setHours(0, 0, 0, 0);
+    const diffTime = expiry - today;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
   const getStatusBadge = (listing) => {
+    const daysUntilExpiry = getDaysUntilExpiry(listing.expiryDate);
+    
+    // First check if the food is expired
+    if (daysUntilExpiry !== null && daysUntilExpiry < 0) {
+      return { text: "Expired", color: "bg-gray-100 text-gray-800 border border-gray-300" };
+    }
+    
+    // Then check other statuses
     if (listing.status === "completed")
       return { text: "Completed", color: "bg-green-100 text-green-800" };
     if (listing.status === "reserved")
       return { text: "Reserved", color: "bg-blue-100 text-blue-800" };
     if (listing.status === "cancelled")
       return { text: "Cancelled", color: "bg-red-100 text-red-800" };
+    
+    // If not expired and no other status, it's available
     return { text: "Available", color: "bg-emerald-100 text-emerald-800" };
   };
 
@@ -103,14 +125,6 @@ export default function FindFood() {
       return `Fresh ${listing.foodType} available for pickup`;
     }
     return "Fresh food donation available for immediate pickup";
-  };
-
-  const getDaysUntilExpiry = (expiryDate) => {
-    if (!expiryDate) return null;
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    const diffTime = expiry - today;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const getExpiryBadge = (days) => {
@@ -303,31 +317,49 @@ export default function FindFood() {
               const expiryBadge = getExpiryBadge(daysUntilExpiry);
               const statusBadge = listing.status;
               const imageUrl = getImageUrl(listing);
+              const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0;
 
               return (
                 <div
                   key={listing._id || listing.id}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 group"
+                  className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 group ${
+                    isExpired 
+                      ? "border-gray-300 opacity-75" 
+                      : "border-gray-200/80"
+                  }`}
                 >
-                  <div className="relative h-48 bg-gradient-to-br from-gray-50 to-emerald-50/30 overflow-hidden">
+                  <div className={`relative h-48 overflow-hidden ${
+                    isExpired 
+                      ? "bg-gradient-to-br from-gray-50 to-gray-100/30" 
+                      : "bg-gradient-to-br from-gray-50 to-emerald-50/30"
+                  }`}>
                     {imageUrl ? (
                       <div className="relative w-full h-full">
                         <img
                           src={imageUrl}
                           alt={getDonorDisplayName(listing)}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                            isExpired ? "grayscale" : ""
+                          }`}
                           onError={(e) => {
                             console.error("Image failed to load:", imageUrl);
                             e.target.style.display = "none";
                             const fallback = document.createElement("div");
-                            fallback.className =
-                              "w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50/80 to-blue-50/80";
+                            fallback.className = `w-full h-full flex items-center justify-center ${
+                              isExpired 
+                                ? "bg-gradient-to-br from-gray-50 to-gray-100/80" 
+                                : "bg-gradient-to-br from-emerald-50/80 to-blue-50/80"
+                            }`;
                             fallback.innerHTML = `
                             <div class="text-center p-4">
-                              <svg class="w-12 h-12 text-emerald-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg class="w-12 h-12 ${
+                                isExpired ? "text-gray-300" : "text-emerald-200"
+                              } mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                               </svg>
-                              <p class="text-emerald-500 font-medium text-sm">Food Image</p>
+                              <p class="${
+                                isExpired ? "text-gray-500" : "text-emerald-500"
+                              } font-medium text-sm">Food Image</p>
                             </div>
                           `;
                             e.target.parentElement.appendChild(fallback);
@@ -336,10 +368,16 @@ export default function FindFood() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-50"></div>
                       </div>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50/80 to-blue-50/80">
+                      <div className={`w-full h-full flex items-center justify-center ${
+                        isExpired 
+                          ? "bg-gradient-to-br from-gray-50 to-gray-100/80" 
+                          : "bg-gradient-to-br from-emerald-50/80 to-blue-50/80"
+                      }`}>
                         <div className="text-center p-4">
                           <svg
-                            className="w-12 h-12 text-emerald-200 mx-auto mb-2"
+                            className={`w-12 h-12 mx-auto mb-2 ${
+                              isExpired ? "text-gray-300" : "text-emerald-200"
+                            }`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -351,7 +389,9 @@ export default function FindFood() {
                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
-                          <p className="text-emerald-500 font-medium text-sm">
+                          <p className={`font-medium text-sm ${
+                            isExpired ? "text-gray-500" : "text-emerald-500"
+                          }`}>
                             No Image
                           </p>
                         </div>
@@ -374,17 +414,27 @@ export default function FindFood() {
                   </div>
                   <div className="p-4">
                     <div className="mb-3">
-                      <h3 className="font-semibold text-gray-900 text-base mb-1 line-clamp-1 group-hover:text-emerald-700 transition-colors">
+                      <h3 className={`font-semibold text-base mb-1 line-clamp-1 transition-colors ${
+                        isExpired 
+                          ? "text-gray-500" 
+                          : "text-gray-900 group-hover:text-emerald-700"
+                      }`}>
                         {getDonorDisplayName(listing)}
                       </h3>
-                      <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
+                      <p className={`text-xs leading-relaxed line-clamp-2 ${
+                        isExpired ? "text-gray-400" : "text-gray-600"
+                      }`}>
                         {getDescription(listing)}
                       </p>
                     </div>
                     <div className="mb-3">
                       <div className="flex items-center gap-1.5 mb-2">
-                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
-                        <h4 className="text-xs font-semibold text-gray-700">
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          isExpired ? "bg-gray-400" : "bg-emerald-400"
+                        }`}></div>
+                        <h4 className={`text-xs font-semibold ${
+                          isExpired ? "text-gray-500" : "text-gray-700"
+                        }`}>
                           Food Items
                         </h4>
                       </div>
@@ -394,7 +444,11 @@ export default function FindFood() {
                           .map((item, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-emerald-50 text-emerald-700 text-xs rounded-lg font-medium border border-emerald-100"
+                              className={`px-2 py-1 text-xs rounded-lg font-medium border ${
+                                isExpired
+                                  ? "bg-gray-50 text-gray-500 border-gray-200"
+                                  : "bg-emerald-50 text-emerald-700 border-emerald-100"
+                              }`}
                             >
                               {item}
                             </span>
@@ -409,16 +463,20 @@ export default function FindFood() {
                     <div className="mb-4">
                       <div className="space-y-2 text-xs">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Quantity:</span>
-                          <span className="font-semibold text-gray-800 text-right">
+                          <span className={isExpired ? "text-gray-400" : "text-gray-500"}>Quantity:</span>
+                          <span className={`font-semibold text-right ${
+                            isExpired ? "text-gray-500" : "text-gray-800"
+                          }`}>
                             {listing.quantity || "Multiple"}
                           </span>
                         </div>
 
                         {listing.expiryDate && (
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-500">Expires:</span>
-                            <span className="font-semibold text-gray-800">
+                            <span className={isExpired ? "text-gray-400" : "text-gray-500"}>Expires:</span>
+                            <span className={`font-semibold ${
+                              isExpired ? "text-gray-500" : "text-gray-800"
+                            }`}>
                               {new Date(
                                 listing.expiryDate
                               ).toLocaleDateString()}
@@ -428,8 +486,10 @@ export default function FindFood() {
 
                         {listing.pickupLocation && (
                           <div className="flex justify-between items-start">
-                            <span className="text-gray-500">Location:</span>
-                            <span className="font-medium text-gray-800 text-right max-w-[60%] line-clamp-1 text-xs">
+                            <span className={isExpired ? "text-gray-400" : "text-gray-500"}>Location:</span>
+                            <span className={`font-medium text-right max-w-[60%] line-clamp-1 text-xs ${
+                              isExpired ? "text-gray-500" : "text-gray-800"
+                            }`}>
                               {listing.pickupLocation}
                             </span>
                           </div>
@@ -441,28 +501,58 @@ export default function FindFood() {
                         to={`/recipient/food-listings/${
                           listing._id || listing.id
                         }`}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-2.5 rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm"
+                        className={`w-full py-2.5 rounded-lg font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 text-sm ${
+                          isExpired
+                            ? "bg-gray-300 text-gray-600 cursor-not-allowed hover:bg-gray-300"
+                            : "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white"
+                        }`}
+                        onClick={(e) => {
+                          if (isExpired) {
+                            e.preventDefault();
+                          }
+                        }}
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                        View Details
+                        {isExpired ? (
+                          <>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                              />
+                            </svg>
+                            Expired
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            View Details
+                          </>
+                        )}
                       </Link>
                     </div>
                   </div>
