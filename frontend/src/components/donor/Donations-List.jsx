@@ -26,11 +26,45 @@ export default function MyDonations() {
     applySortingAndFiltering();
   }, [donations, sortBy, statusFilter, searchTerm]);
 
+  // Check if donation is expired
+  const isDonationExpired = (donation) => {
+    if (!donation.expiryDate) return false;
+    const today = new Date();
+    const expiry = new Date(donation.expiryDate);
+    // Reset time part to compare only dates
+    today.setHours(0, 0, 0, 0);
+    expiry.setHours(0, 0, 0, 0);
+    return expiry < today;
+  };
+
+  // Get actual status considering expiry
+  const getActualStatus = (donation) => {
+    // If donation is already expired, cancelled, or completed, return as is
+    if (donation.status === 'expired' || donation.status === 'cancelled' || donation.status === 'completed') {
+      return donation.status;
+    }
+    
+    // Check if donation is expired
+    if (isDonationExpired(donation)) {
+      return 'expired';
+    }
+    
+    // Otherwise return the original status
+    return donation.status;
+  };
+
   const loadDonations = async () => {
     try {
       setLoading(true);
       const response = await donationAPI.getMyDonations();
-      setDonations(response.data);
+      
+      // Enhance donations with actual status
+      const enhancedDonations = response.data.map(donation => ({
+        ...donation,
+        actualStatus: getActualStatus(donation)
+      }));
+      
+      setDonations(enhancedDonations);
     } catch (error) {
       console.error("Error loading donations:", error);
       toast.error("Failed to load donations");
@@ -41,6 +75,8 @@ export default function MyDonations() {
 
   const applySortingAndFiltering = () => {
     let result = [...donations];
+    
+    // Search filter
     if (searchTerm) {
       result = result.filter(donation => 
         donation.foodType.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -48,9 +84,13 @@ export default function MyDonations() {
         donation.pickupLocation.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+    
+    // Status filter (using actualStatus)
     if (statusFilter !== "all") {
-      result = result.filter((donation) => donation.status === statusFilter);
+      result = result.filter((donation) => donation.actualStatus === statusFilter);
     }
+    
+    // Sorting
     result.sort((a, b) => {
       switch (sortBy) {
         case "newest":
@@ -71,13 +111,59 @@ export default function MyDonations() {
     setFilteredDonations(result);
   };
 
+  // Check if donation can be deleted
+  const canDeleteDonation = (donation) => {
+    // Check if user owns the donation
+    const isOwner = donation.donor && donation.donor._id === user.id;
+    
+    // Check if donation status allows deletion (use actualStatus)
+    const allowedStatuses = ['available', 'draft', 'cancelled', 'expired'];
+    const isDeletableStatus = allowedStatuses.includes(donation.actualStatus);
+    
+    return isOwner && isDeletableStatus;
+  };
+
+  // Get delete restriction reason
+  const getDeleteRestrictionReason = (donation) => {
+    if (!donation.donor || donation.donor._id !== user.id) {
+      return "You can only delete your own donations";
+    }
+    
+    switch (donation.actualStatus) {
+      case 'reserved':
+        return "Cannot delete - donation has been reserved";
+      case 'claimed':
+        return "Cannot delete - donation has been claimed";
+      case 'completed':
+        return "Cannot delete - donation has been completed";
+      default:
+        return null;
+    }
+  };
+
   const handleDeleteClick = (donation) => {
+    // Check authorization before showing delete modal
+    if (!canDeleteDonation(donation)) {
+      const reason = getDeleteRestrictionReason(donation);
+      toast.error(reason || "Cannot delete this donation");
+      return;
+    }
+
     setDonationToDelete(donation);
     setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (!donationToDelete) return;
+
+    // Enhanced validation
+    if (!canDeleteDonation(donationToDelete)) {
+      const reason = getDeleteRestrictionReason(donationToDelete);
+      toast.error(reason || "Not authorized to delete this donation");
+      setShowDeleteModal(false);
+      setDonationToDelete(null);
+      return;
+    }
 
     setDeleteLoading(donationToDelete._id);
     try {
@@ -103,7 +189,9 @@ export default function MyDonations() {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    const actualStatus = status.actualStatus || status;
+    
+    switch (actualStatus) {
       case "available":
         return "bg-emerald-100 text-emerald-800 border border-emerald-200";
       case "reserved":
@@ -114,13 +202,17 @@ export default function MyDonations() {
         return "bg-purple-100 text-purple-800 border border-purple-200";
       case "cancelled":
         return "bg-red-100 text-red-800 border border-red-200";
+      case "expired":
+        return "bg-gray-100 text-gray-800 border border-gray-200";
       default:
         return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
+    const actualStatus = status.actualStatus || status;
+    
+    switch (actualStatus) {
       case "available":
         return (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,6 +243,12 @@ export default function MyDonations() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         );
+      case "expired":
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
       default:
         return (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +259,7 @@ export default function MyDonations() {
   };
 
   const getStatusCount = (status) => {
-    return donations.filter((d) => d.status === status).length;
+    return donations.filter((d) => d.actualStatus === status).length;
   };
 
   const formatDate = (dateString) => {
@@ -173,8 +271,12 @@ export default function MyDonations() {
   };
 
   const getDaysUntilExpiry = (expiryDate) => {
+    if (!expiryDate) return null;
     const today = new Date();
     const expiry = new Date(expiryDate);
+    // Reset time part to compare only dates
+    today.setHours(0, 0, 0, 0);
+    expiry.setHours(0, 0, 0, 0);
     const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
@@ -187,8 +289,8 @@ export default function MyDonations() {
           <div className="animate-pulse">
             <div className="h-8 bg-slate-200 rounded w-1/3 mb-4"></div>
             <div className="h-4 bg-slate-200 rounded w-1/2 mb-12"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              {[1, 2, 3, 4].map(i => (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+              {[1, 2, 3, 4, 5].map(i => (
                 <div key={i} className="bg-white rounded-xl p-6 border border-slate-200">
                   <div className="h-10 bg-slate-200 rounded w-10 mb-4"></div>
                   <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
@@ -222,6 +324,8 @@ export default function MyDonations() {
               + New Donation
             </Link>
           </div>
+          
+          {/* Stats Grid - Added Expired Donations */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
             <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm text-center">
               <div className="text-2xl font-serif font-normal text-slate-900 mb-1">
@@ -248,13 +352,14 @@ export default function MyDonations() {
               <div className="text-slate-600 text-sm font-light">Completed</div>
             </div>
             <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm text-center">
-              <div className="text-2xl font-serif font-normal text-amber-600 mb-1">
-                {getStatusCount("reserved")}
+              <div className="text-2xl font-serif font-normal text-gray-600 mb-1">
+                {getStatusCount("expired")}
               </div>
-              <div className="text-slate-600 text-sm font-light">Reserved</div>
+              <div className="text-slate-600 text-sm font-light">Expired</div>
             </div>
           </div>
         </div>
+        
         <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-1">
@@ -284,6 +389,7 @@ export default function MyDonations() {
                 <option value="claimed">Claimed</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="expired">Expired</option>
               </select>
             </div>
             <div>
@@ -309,6 +415,7 @@ export default function MyDonations() {
             </div>
           </div>
         </div>
+        
         {filteredDonations.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-slate-300">
             <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -339,37 +446,54 @@ export default function MyDonations() {
             {filteredDonations.map((donation) => {
               const daysUntilExpiry = getDaysUntilExpiry(donation.expiryDate);
               const isExpiringSoon = daysUntilExpiry <= 3 && daysUntilExpiry >= 0;
-              const isExpired = daysUntilExpiry < 0;
+              const isExpired = donation.actualStatus === 'expired';
+              const actualStatus = donation.actualStatus;
+              const canDelete = canDeleteDonation(donation);
+              const deleteReason = getDeleteRestrictionReason(donation);
 
               return (
                 <div
                   key={donation._id}
-                  className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                  className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden ${
+                    isExpired 
+                      ? "border-gray-300 opacity-75" 
+                      : "border-slate-200"
+                  }`}
                 >
-                  <div className="p-6 border-b border-slate-100">
+                  <div className={`p-6 border-b ${
+                    isExpired ? "border-gray-200" : "border-slate-100"
+                  }`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <h3 className="font-serif font-normal text-xl text-slate-900 mb-1">
+                        <h3 className={`font-serif font-normal text-xl mb-1 ${
+                          isExpired ? "text-gray-600" : "text-slate-900"
+                        }`}>
                           {donation.foodType}
                         </h3>
-                        <p className="text-slate-600 text-sm line-clamp-2">
+                        <p className={`text-sm line-clamp-2 ${
+                          isExpired ? "text-gray-500" : "text-slate-600"
+                        }`}>
                           {donation.description}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
                         <span
                           className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusColor(
-                            donation.status
+                            donation
                           )}`}
                         >
-                          {getStatusIcon(donation.status)}
-                          {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                          {getStatusIcon(donation)}
+                          {actualStatus.charAt(0).toUpperCase() + actualStatus.slice(1)}
                         </span>
                         <button
                           onClick={() => handleDeleteClick(donation)}
-                          disabled={deleteLoading === donation._id}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Delete donation"
+                          disabled={deleteLoading === donation._id || !canDelete}
+                          className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${
+                            canDelete 
+                              ? "text-slate-400 hover:text-red-600 hover:bg-red-50" 
+                              : "text-gray-300 cursor-not-allowed"
+                          }`}
+                          title={canDelete ? "Delete donation" : deleteReason}
                         >
                           {deleteLoading === donation._id ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
@@ -386,7 +510,7 @@ export default function MyDonations() {
                         <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span className="text-slate-700">
+                        <span className={isExpired ? "text-gray-500" : "text-slate-700"}>
                           <strong>Listed:</strong> {formatDate(donation.createdAt)}
                         </span>
                       </div>
@@ -394,7 +518,7 @@ export default function MyDonations() {
                         <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        <span className="text-slate-700">
+                        <span className={isExpired ? "text-gray-500" : "text-slate-700"}>
                           <strong>Quantity:</strong> {donation.quantity}
                         </span>
                       </div>
@@ -407,7 +531,9 @@ export default function MyDonations() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span className="text-slate-700 text-sm">
+                        <span className={`text-sm ${
+                          isExpired ? "text-gray-500" : "text-slate-700"
+                        }`}>
                           {donation.pickupLocation}
                         </span>
                       </div>
@@ -422,7 +548,7 @@ export default function MyDonations() {
                         <span className={`text-sm font-medium ${
                           isExpired ? 'text-red-600' : 
                           isExpiringSoon ? 'text-amber-600' : 
-                          'text-slate-700'
+                          isExpired ? 'text-gray-500' : 'text-slate-700'
                         }`}>
                           Expires: {formatDate(donation.expiryDate)}
                           {isExpiringSoon && !isExpired && (
@@ -444,23 +570,29 @@ export default function MyDonations() {
                         <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <span className="text-red-600 text-sm">
+                        <span className={`text-sm ${
+                          isExpired ? "text-red-500" : "text-red-600"
+                        }`}>
                           <strong>Allergens:</strong> {donation.allergens}
                         </span>
                       </div>
                     )}
 
                     {donation.recipient && (
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <div className="flex items-center gap-2 text-blue-900 font-semibold mb-1">
+                      <div className={`rounded-lg p-4 border ${
+                        isExpired 
+                          ? "bg-gray-100 border-gray-300 text-gray-600" 
+                          : "bg-blue-50 border-blue-200 text-blue-800"
+                      }`}>
+                        <div className="flex items-center gap-2 font-semibold mb-1">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           <span>Claimed by:</span>
                         </div>
-                        <p className="text-blue-800 text-sm">{donation.recipient.name}</p>
+                        <p className="text-sm">{donation.recipient.name}</p>
                         {donation.recipient.phone && (
-                          <div className="flex items-center gap-1 text-blue-700 text-sm mt-1">
+                          <div className="flex items-center gap-1 text-sm mt-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
@@ -469,12 +601,20 @@ export default function MyDonations() {
                         )}
                       </div>
                     )}
+
+                    {/* Show delete restriction message for expired donations */}
+                    {!canDelete && deleteReason && (
+                      <div className="mt-3 text-xs text-gray-500 bg-gray-50 p-2 rounded border border-gray-200">
+                        {deleteReason}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+        
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
@@ -498,6 +638,9 @@ export default function MyDonations() {
                   </p>
                   <p className="text-sm text-slate-600">
                     {donationToDelete.quantity}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Status: {donationToDelete.actualStatus}
                   </p>
                 </div>
               )}
