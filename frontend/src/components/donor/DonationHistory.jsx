@@ -24,13 +24,46 @@ export default function DonationHistory({ onUpdate }) {
     applySortingAndFiltering();
   }, [donations, sortBy, statusFilter]);
 
+  // Check if donation is expired
+  const isDonationExpired = (donation) => {
+    if (!donation.expiryDate) return false;
+    const today = new Date();
+    const expiry = new Date(donation.expiryDate);
+    // Reset time part to compare only dates
+    today.setHours(0, 0, 0, 0);
+    expiry.setHours(0, 0, 0, 0);
+    return expiry < today;
+  };
+
+  // Get actual status considering expiry
+  const getActualStatus = (donation) => {
+    // If donation is already expired, cancelled, or completed, return as is
+    if (donation.status === 'expired' || donation.status === 'cancelled' || donation.status === 'completed') {
+      return donation.status;
+    }
+    
+    // Check if donation is expired
+    if (isDonationExpired(donation)) {
+      return 'expired';
+    }
+    
+    // Otherwise return the original status
+    return donation.status;
+  };
+
   const loadDonations = async () => {
     try {
       console.log("Loading donations for user:", user.id);
       const response = await donationAPI.getMyDonations();
       console.log("My Donations Response:", response.data);
 
-      setDonations(response.data);
+      // Enhance donations with actual status
+      const enhancedDonations = response.data.map(donation => ({
+        ...donation,
+        actualStatus: getActualStatus(donation)
+      }));
+
+      setDonations(enhancedDonations);
     } catch (error) {
       console.error("Error loading donations:", error);
       try {
@@ -39,8 +72,15 @@ export default function DonationHistory({ onUpdate }) {
         const myDonations = allResponse.data.filter(
           (donation) => donation.donor && donation.donor._id === user.id
         );
-        console.log("Fallback My Donations:", myDonations);
-        setDonations(myDonations);
+        
+        // Enhance donations with actual status
+        const enhancedDonations = myDonations.map(donation => ({
+          ...donation,
+          actualStatus: getActualStatus(donation)
+        }));
+
+        console.log("Fallback My Donations:", enhancedDonations);
+        setDonations(enhancedDonations);
       } catch (fallbackError) {
         console.error("Fallback also failed:", fallbackError);
         toast.error("Failed to load donations");
@@ -52,9 +92,12 @@ export default function DonationHistory({ onUpdate }) {
 
   const applySortingAndFiltering = () => {
     let result = [...donations];
+    
+    // Filter by status (using actualStatus)
     if (statusFilter !== "all") {
-      result = result.filter((donation) => donation.status === statusFilter);
+      result = result.filter((donation) => donation.actualStatus === statusFilter);
     }
+    
     result.sort((a, b) => {
       switch (sortBy) {
         case "newest":
@@ -66,7 +109,7 @@ export default function DonationHistory({ onUpdate }) {
         case "expiry-desc":
           return new Date(b.expiryDate) - new Date(a.expiryDate);
         case "status":
-          return a.status.localeCompare(b.status);
+          return a.actualStatus.localeCompare(b.actualStatus);
         case "food-type":
           return a.foodType.localeCompare(b.foodType);
         default:
@@ -82,9 +125,9 @@ export default function DonationHistory({ onUpdate }) {
     // Check if user owns the donation
     const isOwner = donation.donor && donation.donor._id === user.id;
     
-    // Check if donation status allows deletion
-    const allowedStatuses = ['available', 'draft', 'cancelled'];
-    const isDeletableStatus = allowedStatuses.includes(donation.status);
+    // Check if donation status allows deletion (use actualStatus)
+    const allowedStatuses = ['available', 'draft', 'cancelled', 'expired'];
+    const isDeletableStatus = allowedStatuses.includes(donation.actualStatus);
     
     return isOwner && isDeletableStatus;
   };
@@ -95,15 +138,13 @@ export default function DonationHistory({ onUpdate }) {
       return "You can only delete your own donations";
     }
     
-    switch (donation.status) {
+    switch (donation.actualStatus) {
       case 'reserved':
         return "Cannot delete - donation has been reserved";
       case 'claimed':
         return "Cannot delete - donation has been claimed";
       case 'completed':
         return "Cannot delete - donation has been completed";
-      case 'expired':
-        return "Cannot delete - donation has expired";
       default:
         return null;
     }
@@ -139,7 +180,7 @@ export default function DonationHistory({ onUpdate }) {
         donationId: donationToDelete._id,
         donorId: donationToDelete.donor?._id,
         currentUserId: user?.id,
-        status: donationToDelete.status
+        status: donationToDelete.actualStatus
       });
   
       await donationAPI.delete(donationToDelete._id);
@@ -206,7 +247,7 @@ export default function DonationHistory({ onUpdate }) {
   };
 
   const getStatusCount = (status) => {
-    return donations.filter((d) => d.status === status).length;
+    return donations.filter((d) => d.actualStatus === status).length;
   };
 
   if (loading) {
@@ -238,6 +279,9 @@ export default function DonationHistory({ onUpdate }) {
           <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full font-medium">
             {getStatusCount("completed")} Completed
           </span>
+          <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full font-medium">
+            {getStatusCount("expired")} Expired
+          </span>
         </div>
       </div>
       
@@ -268,6 +312,9 @@ export default function DonationHistory({ onUpdate }) {
                 </option>
                 <option value="cancelled">
                   Cancelled ({getStatusCount("cancelled")})
+                </option>
+                <option value="expired">
+                  Expired ({getStatusCount("expired")})
                 </option>
               </select>
             </div>
@@ -319,51 +366,62 @@ export default function DonationHistory({ onUpdate }) {
           {filteredDonations.map((donation) => {
             const canDelete = canDeleteDonation(donation);
             const deleteReason = getDeleteRestrictionReason(donation);
+            const actualStatus = donation.actualStatus;
+            const isExpired = actualStatus === 'expired';
             
             return (
               <div
                 key={donation._id}
-                className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm hover:shadow-md transition-all duration-200"
+                className={`border rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 ${
+                  isExpired 
+                    ? "border-gray-300 bg-gray-50 opacity-75" 
+                    : "border-gray-200 bg-white"
+                }`}
               >
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-bold text-xl text-gray-900">
+                      <h4 className={`font-bold text-xl ${
+                        isExpired ? "text-gray-600" : "text-gray-900"
+                      }`}>
                         {donation.foodType}
                       </h4>
                       <span
                         className={`px-3 py-1.5 rounded-full text-sm font-semibold ${getStatusColor(
-                          donation.status
+                          actualStatus
                         )}`}
                       >
-                        {donation.status.charAt(0).toUpperCase() +
-                          donation.status.slice(1)}
+                        {actualStatus.charAt(0).toUpperCase() +
+                          actualStatus.slice(1)}
                       </span>
                     </div>
 
-                    <p className="text-gray-600 mb-4 leading-relaxed">
+                    <p className={`mb-4 leading-relaxed ${
+                      isExpired ? "text-gray-500" : "text-gray-600"
+                    }`}>
                       {donation.description}
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <span>
+                        <span className={isExpired ? "text-gray-500" : ""}>
                           <strong>Quantity:</strong> {donation.quantity}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span>
+                        <span className={isExpired ? "text-gray-500" : ""}>
                           <strong>Expires:</strong>{" "}
                           {new Date(donation.expiryDate).toLocaleDateString()}
+                          {isExpired && " ⚠️"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span>
+                        <span className={isExpired ? "text-gray-500" : ""}>
                           <strong>Location:</strong> {donation.pickupLocation}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span>
+                        <span className={isExpired ? "text-gray-500" : ""}>
                           <strong>Listed:</strong>{" "}
                           {new Date(donation.createdAt).toLocaleDateString()}
                         </span>
@@ -371,9 +429,11 @@ export default function DonationHistory({ onUpdate }) {
                     </div>
 
                     {donation.allergens && (
-                      <div className="mt-3 flex items-center gap-2 text-sm">
+                      <div className={`mt-3 flex items-center gap-2 text-sm ${
+                        isExpired ? "text-gray-500" : "text-red-500"
+                      }`}>
                         <span>
-                          <strong className="text-red-500">Allergens:</strong> {donation.allergens}
+                          <strong>Allergens:</strong> {donation.allergens}
                         </span>
                       </div>
                     )}
@@ -413,12 +473,16 @@ export default function DonationHistory({ onUpdate }) {
                 </div>
 
                 {donation.recipient && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-2 text-blue-900 font-semibold mb-1">
+                  <div className={`mt-4 p-4 rounded-lg border ${
+                    isExpired 
+                      ? "bg-gray-100 border-gray-300 text-gray-600" 
+                      : "bg-blue-50 border-blue-200 text-blue-800"
+                  }`}>
+                    <div className="flex items-center gap-2 font-semibold mb-1">
                       <span>👤</span>
                       <span>Claimed by:</span>
                     </div>
-                    <p className="text-blue-800">{donation.recipient.name}</p>
+                    <p>{donation.recipient.name}</p>
                   </div>
                 )}
 
@@ -471,7 +535,7 @@ export default function DonationHistory({ onUpdate }) {
                 {donationToDelete.quantity}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Status: {donationToDelete.status}
+                Status: {donationToDelete.actualStatus}
               </p>
             </div>
 
