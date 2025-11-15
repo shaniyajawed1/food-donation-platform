@@ -1,11 +1,10 @@
 {
     "build": {
-      "workdir": "backend"
+      "workdir": "backend",
+      "command": "npm ci"
     },
     "deploy": {
       "workdir": "backend",
       "start": "npm start"
     }
   }
-
-  
