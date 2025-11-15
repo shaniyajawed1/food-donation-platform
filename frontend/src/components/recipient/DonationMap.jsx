@@ -11,8 +11,34 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
-const foodIcon = new L.Icon({
+
+const availableFoodIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgNDFDMTkuNDA0IDQxIDI1IDMxLjgyNzkgMjUgMjAuNUMyNSA5LjE3MjEgMTkuNDA0IDAgMTIuNSAwQzUuNTk1OTcgMCAwIDkuMTcyMSAwIDIwLjVDMCAzMS44Mjc5IDUuNTk1OTcgNDEgMTIuNSA0MVoiIGZpbGw9IiMxMEE4NTgiLz4KPHBhdGggZD0iTTEyLjUgMzZDMjEuMDU1OSAzNiAyOCAyOC4wNTU5IDI4IDE5LjVDMjggMTAuOTQ0MSAyMS4wNTU5IDQgMTIuNSA0QzMuOTQ0MDYgNCAwIDEwLjk0NDEgMCAxOS41QzAgMjguMDU1OSAzLjk0NDA2IDM2IDEyLjUgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYuNSAxNS41QzE2LjUgMTcuMTU2OSAxNC42NTY5IDE5IDEzIDE5QzExLjM0MzEgMTkgOS41IDE3LjE1NjkgOS41IDE1LjVDOS41IDEzLjg0MzEgMTEuMzQzMSAxMiAxMyAxMkMxNC42NTY5IDEyIDE2LjUgMTMuODQzMSAxNi41IDE1LjVaIiBmaWxsPSIjMTBBODU4Ii8+CjxwYXRoIGQ9Ik0xMCAyMkMxMCAyMiAxMiAyNSAxMyAyNUMxNCAyNSAxNiAyMiAxNiAyMkMxNiAyMiAxOCAyNCAxOCAyNkMxOCAyOCAxNi41IDMwIDEzIDMwQzkuNSAzMCA4IDI4IDggMjZDOCAyNCAxMCAyMiAxMCAyMloiIGZpbGw9IiMxMEE4NTgiLz4KPC9zdmc+',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const expiredFoodIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgNDFDMTkuNDA0IDQxIDI1IDMxLjgyNzkgMjUgMjAuNUMyNSA5LjE3MjEgMTkuNDA0IDAgMTIuNSAwQzUuNTk1OTcgMCAwIDkuMTcyMSAwIDIwLjVDMCAzMS44Mjc5IDUuNTk1OTcgNDEgMTIuNSA0MVoiIGZpbGw9IiNERTIzMjMiLz4KPHBhdGggZD0iTTEyLjUgMzZDMjEuMDU1OSAzNiAyOCAyOC4wNTU5IDI4IDE5LjVDMjggMTAuOTQ0MSAyMS4wNTU5IDQgMTIuNSA0QzMuOTQ0MDYgNCAwIDEwLjk0NDEgMCAxOS41QzAgMjguMDU1OSAzLjk0NDA2IDM2IDEyLjUgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYuNSAxNS41QzE2LjUgMTcuMTU2OSAxNC42NTY5IDE5IDEzIDE5QzExLjM0MzEgMTkgOS41IDE3LjE1NjkgOS41IDE1LjVDOS41IDEzLjg0MzEgMTEuMzQzMSAxMiAxMyAxMkMxNC42NTY5IDEyIDE2LjUgMTMuODQzMSAxNi41IDE1LjVaIiBmaWxsPSIjREUyMzIzIi8+CjxwYXRoIGQ9Ik0xMCAyMkMxMCAyMiAxMiAyNSAxMyAyNUMxNCAyNSAxNiAyMiAxNiAyMkMxNiAyMiAxOCAyNCAxOCAyNkMxOCAyOCAxNi41IDMwIDEzIDMwQzkuNSAzMCA4IDI4IDggMjZDOCAyNCAxMCAyMiAxMCAyMloiIGZpbGw9IiNERTIzMjMiLz4KPHBhdGggZD0iTTggOEwxNyAxNyIgc3Ryb2tlPSIjREUyMzIzIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTcgOEw4IDE3IiBzdHJva2U9IiNERTIzMjMiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Reserved donation icon (yellow/orange)
+const reservedFoodIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgNDFDMTkuNDA0IDQxIDI1IDMxLjgyNzkgMjUgMjAuNUMyNSA5LjE3MjEgMTkuNDA0IDAgMTIuNSAwQzUuNTk1OTcgMCAwIDkuMTcyMSAwIDIwLjVDMCAzMS44Mjc5IDUuNTk1OTcgNDEgMTIuNSA0MVoiIGZpbGw9IiNGNTk1MTAiLz4KPHBhdGggZD0iTTEyLjUgMzZDMjEuMDU1OSAzNiAyOCAyOC4wNTU5IDI4IDE5LjVDMjggMTAuOTQ0MSAyMS4wNTU5IDQgMTIuNSA0QzMuOTQ0MDYgNCAwIDEwLjk0NDEgMCAxOS41QzAgMjguMDU1OSAzLjk0NDA2IDM2IDEyLjUgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYuNSAxNS41QzE2LjUgMTcuMTU2OSAxNC42NTY5IDE5IDEzIDE5QzExLjM0MzEgMTkgOS41IDE3LjE1NjkgOS41IDE1LjVDOS41IDEzLjg0MzEgMTEuMzQzMSAxMiAxMyAxMkMxNC42NTY5IDEyIDE2LjUgMTMuODQzMSAxNi41IDE1LjVaIiBmaWxsPSIjRjU5NTEwIi8+CjxwYXRoIGQ9Ik0xMCAyMkMxMCAyMiAxMiAyNSAxMyAyNUMxNCAyNSAxNiAyMiAxNiAyMkMxNiAyMiAxOCAyNCAxOCAyNkMxOCAyOCAxNi41IDMwIDEzIDMwQzkuNSAzMCA4IDI4IDggMjZDOCAyNCAxMCAyMiAxMCAyMloiIGZpbGw9IiNGNTk1MTAiLz4KPC9zdmc+',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const claimedFoodIcon = new L.Icon({
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgNDFDMTkuNDA0IDQxIDI1IDMxLjgyNzkgMjUgMjAuNUMyNSA5LjE3MjEgMTkuNDA0IDAgMTIuNSAwQzUuNTk1OTcgMCAwIDkuMTcyMSAwIDIwLjVDMCAzMS44Mjc5IDUuNTk1OTcgNDEgMTIuNSA0MVoiIGZpbGw9IiMzQjg1RjQiLz4KPHBhdGggZD0iTTEyLjUgMzZDMjEuMDU1OSAzNiAyOCAyOC4wNTU5IDI4IDE5LjVDMjggMTAuOTQ0MSAyMS4wNTU5IDQgMTIuNSA0QzMuOTQ0MDYgNCAwIDEwLjk0NDEgMCAxOS41QzAgMjguMDU1OSAzLjk0NDA2IDM2IDEyLjUgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYuNSAxNS41QzE2LjUgMTcuMTU2OSAxNC42NTY5IDE5IDEzIDE5QzExLjM0MzEgMTkgOS41IDE3LjE1NjkgOS41IDE1LjVDOS41IDEzLjg0MzEgMTEuMzQzMSAxMiAxMyAxMkMxNC42NTY5IDEyIDE2LjUgMTMuODQzMSAxNi41IDE1LjVaIiBmaWxsPSIjM0I4NUY0Ii8+CjxwYXRoIGQ9Ik0xMCAyMkMxMCAyMiAxMiAyNSAxMyAyNUMxNCAyNSAxNiAyMiAxNiAyMkMxNiAyMiAxOCAyNCAxOCAyNkMxOCAyOCAxNi41IDMwIDEzIDMwQzkuNSAzMCA4IDI4IDggMjZDOCAyNCAxMCAyMiAxMCAyMloiIGZpbGw9IiMzQjg1RjQiLz4KPHBhdGggZD0iTTEwIDE0TDEyIDE2TDE2IDEyIiBzdHJva2U9IiMzQjg1RjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWxsPSJub25lIi8+Cjwvc3ZnPg==',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -27,6 +53,52 @@ export default function DonationMap() {
   const [geocodingProgress, setGeocodingProgress] = useState(0);
   const defaultCenter = [28.6139, 77.2090]; 
 
+  const isDonationExpired = (donation) => {
+    if (!donation.expiryDate) return false;
+    
+    const expiryDate = new Date(donation.expiryDate);
+    const now = new Date();
+  
+    return expiryDate < now;
+  };
+
+  const getActualStatus = (donation) => {
+    if (isDonationExpired(donation)) {
+      return 'expired';
+    }
+    return donation.status;
+  };
+
+  const getDonationIcon = (donation) => {
+    const actualStatus = getActualStatus(donation);
+    
+    switch (actualStatus) {
+      case 'available':
+        return availableFoodIcon;
+      case 'expired':
+        return expiredFoodIcon;
+      case 'reserved':
+        return reservedFoodIcon;
+      case 'claimed':
+        return claimedFoodIcon;
+      default:
+        return availableFoodIcon;
+    }
+  };
+
+  // Get status color for display
+  const getStatusColor = (donation) => {
+    const actualStatus = getActualStatus(donation);
+    
+    switch (actualStatus) {
+      case 'available': return 'text-green-600';
+      case 'expired': return 'text-red-600';
+      case 'reserved': return 'text-yellow-600';
+      case 'claimed': return 'text-blue-600';
+      default: return 'text-gray-600';
+    }
+  };
+
   useEffect(() => {
     fetchDonations();
     getUserLocation();
@@ -39,7 +111,9 @@ export default function DonationMap() {
       const response = await donationAPI.getAll();
       
       if (response.data) {
-        const availableDonations = response.data.filter(donation => donation.status === 'available');
+        const availableDonations = response.data.filter(donation => 
+          donation.status === 'available' || donation.status === 'reserved'
+        );
         console.log("Available donations:", availableDonations);
         const donationsWithCoords = await geocodeAllDonations(availableDonations);
         setDonations(donationsWithCoords);
@@ -82,7 +156,8 @@ export default function DonationMap() {
         results.push({
           ...donation,
           coordinates: coordinates,
-          originalAddress: donation.pickupLocation 
+          originalAddress: donation.pickupLocation,
+          actualStatus: getActualStatus(donation) 
         });
       } catch (error) {
         console.warn(`Failed to geocode: ${donation.pickupLocation}`, error);
@@ -93,7 +168,8 @@ export default function DonationMap() {
             defaultCenter[1] + (Math.random() - 0.5) * 0.1
           ],
           originalAddress: donation.pickupLocation,
-          geocodeFailed: true
+          geocodeFailed: true,
+          actualStatus: getActualStatus(donation) 
         });
       }
       setGeocodingProgress(Math.round(((i + 1) / donations.length) * 100));
@@ -169,13 +245,22 @@ export default function DonationMap() {
     ];
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'available': return 'text-green-600';
-      case 'reserved': return 'text-yellow-600';
-      case 'claimed': return 'text-blue-600';
-      default: return 'text-gray-600';
-    }
+  // Count donations by actual status
+  const getDonationCounts = () => {
+    const counts = {
+      available: 0,
+      expired: 0,
+      reserved: 0,
+      claimed: 0,
+      total: donations.length
+    };
+
+    donations.forEach(donation => {
+      const actualStatus = getActualStatus(donation);
+      counts[actualStatus]++;
+    });
+
+    return counts;
   };
 
   if (loading) {
@@ -204,6 +289,8 @@ export default function DonationMap() {
     );
   }
 
+  const donationCounts = getDonationCounts();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -231,28 +318,34 @@ export default function DonationMap() {
         )}
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-emerald-600">{donations.length}</div>
+              <div className="text-2xl font-bold text-gray-600">{donationCounts.total}</div>
               <div className="text-sm text-gray-600">Total Donations</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-green-600">
-                {donations.filter(d => d.status === 'available').length}
+                {donationCounts.available}
               </div>
-              <div className="text-sm text-gray-600">Available Now</div>
+              <div className="text-sm text-gray-600">Available</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-600">
-                {donations.filter(d => d.status === 'claimed').length}
+              <div className="text-2xl font-bold text-red-600">
+                {donationCounts.expired}
               </div>
-              <div className="text-sm text-gray-600">Claimed</div>
+              <div className="text-sm text-gray-600">Expired</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-yellow-600">
-                {donations.filter(d => d.status === 'reserved').length}
+                {donationCounts.reserved}
               </div>
               <div className="text-sm text-gray-600">Reserved</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-blue-600">
+                {donationCounts.claimed}
+              </div>
+              <div className="text-sm text-gray-600">Claimed</div>
             </div>
           </div>
         </div>
@@ -282,7 +375,7 @@ export default function DonationMap() {
                   <Marker
                     key={donation._id || index}
                     position={donation.coordinates}
-                    icon={foodIcon}
+                    icon={getDonationIcon(donation)}
                   >
                     <Popup>
                       <div className="min-w-[250px]">
@@ -298,16 +391,17 @@ export default function DonationMap() {
                           
                           <div className="flex justify-between">
                             <span className="text-gray-600">Status:</span>
-                            <span className={`font-semibold ${getStatusColor(donation.status)}`}>
-                              {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                            <span className={`font-semibold ${getStatusColor(donation)}`}>
+                              {getActualStatus(donation).charAt(0).toUpperCase() + getActualStatus(donation).slice(1)}
                             </span>
                           </div>
 
                           {donation.expiryDate && (
                             <div className="flex justify-between">
                               <span className="text-gray-600">Expires:</span>
-                              <span className="font-semibold">
+                              <span className={`font-semibold ${isDonationExpired(donation) ? 'text-red-600' : ''}`}>
                                 {new Date(donation.expiryDate).toLocaleDateString()}
+                                {isDonationExpired(donation) && ' (Expired)'}
                               </span>
                             </div>
                           )}
@@ -332,7 +426,7 @@ export default function DonationMap() {
                           )}
                         </div>
 
-                        {donation.status === 'available' && (
+                        {getActualStatus(donation) === 'available' && (
                           <div className="mt-4">
                             <Link
                               to={`/recipient/food-listings/${donation._id}`}
@@ -340,6 +434,14 @@ export default function DonationMap() {
                             >
                               View Details & Claim
                             </Link>
+                          </div>
+                        )}
+
+                        {getActualStatus(donation) === 'expired' && (
+                          <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-700 text-sm text-center font-medium">
+                              This donation has expired
+                            </p>
                           </div>
                         )}
                       </div>
@@ -359,12 +461,20 @@ export default function DonationMap() {
               <span>Your Location</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-[#10A858] rounded-full"></div>
-              <span>Food Donations</span>
+              <div className="w-4 h-4 bg-green-600 rounded-full"></div>
+              <span>Available Food</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-              <span>Other Locations</span>
+              <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+              <span>Expired Food</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+              <span>Reserved Food</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+              <span>Claimed Food</span>
             </div>
           </div>
         </div>
