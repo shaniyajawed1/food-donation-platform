@@ -1,0 +1,11 @@
+{
+    "build": {
+      "workdir": "backend"
+    },
+    "deploy": {
+      "workdir": "backend",
+      "start": "npm start"
+    }
+  }
+
+  
