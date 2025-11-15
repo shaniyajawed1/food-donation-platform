@@ -183,7 +183,6 @@ export default function FindFood() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-emerald-700 bg-clip-text text-transparent mb-4">
             Find Available Food
@@ -192,8 +191,6 @@ export default function FindFood() {
             Discover fresh food donations from local businesses and restaurants near you
           </p>
         </div>
-
-        {/* Map Link */}
         <div className="flex justify-center mb-8">
           <Link
             to="/recipient/map"
@@ -215,11 +212,9 @@ export default function FindFood() {
             View Food Map
           </Link>
         </div>
-
-        {/* Search and Filter Section */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6 mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-            {/* Search Input */}
+        
             <div className="lg:col-span-8">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Search Food Listings

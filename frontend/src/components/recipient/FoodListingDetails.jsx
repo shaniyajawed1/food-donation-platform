@@ -119,6 +119,41 @@ export default function FoodListingDetails() {
     });
   };
 
+  // Get donor name from the listing data
+  const getDonorName = () => {
+    if (!listing) return "Anonymous Donor";
+    
+    // Check different possible donor name fields
+    if (listing.donor?.name) {
+      return listing.donor.name;
+    }
+    if (listing.donorName) {
+      return listing.donorName;
+    }
+    if (listing.donor?.username) {
+      return listing.donor.username;
+    }
+    if (listing.donor?.email) {
+      return listing.donor.email.split('@')[0]; // Use part of email as fallback
+    }
+    
+    return "Anonymous Donor";
+  };
+
+  // Get donor contact info if available
+  const getDonorContact = () => {
+    if (!listing) return null;
+    
+    if (listing.donor?.email) {
+      return listing.donor.email;
+    }
+    if (listing.donor?.phone) {
+      return listing.donor.phone;
+    }
+    
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-8">
@@ -169,6 +204,8 @@ export default function FoodListingDetails() {
 
   const daysUntilExpiry = getDaysUntilExpiry(listing.expiryDate);
   const isExpired = daysUntilExpiry < 0;
+  const donorName = getDonorName();
+  const donorContact = getDonorContact();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-8">
@@ -187,7 +224,6 @@ export default function FoodListingDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="space-y-4">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
-              {/* Replace the entire image section with this enhanced version */}
               <div className="space-y-4">
                 {/* Main Image */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
@@ -207,13 +243,13 @@ export default function FoodListingDetails() {
                           fallback.className =
                             "w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-blue-100";
                           fallback.innerHTML = `
-              <div class="text-center">
-                <svg class="w-16 h-16 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <p class="text-emerald-500 font-medium mt-2">Food Image</p>
-              </div>
-            `;
+                            <div class="text-center">
+                              <svg class="w-16 h-16 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                              </svg>
+                              <p class="text-emerald-500 font-medium mt-2">Food Image</p>
+                            </div>
+                          `;
                           e.target.parentElement.appendChild(fallback);
                         }}
                       />
@@ -261,12 +297,12 @@ export default function FoodListingDetails() {
                             onError={(e) => {
                               e.target.style.display = "none";
                               e.target.parentElement.innerHTML = `
-                  <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                  </div>
-                `;
+                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                  </svg>
+                                </div>
+                              `;
                             }}
                           />
                         </div>
@@ -276,6 +312,28 @@ export default function FoodListingDetails() {
                 )}
               </div>
             </div>
+
+            {/* Donor Information Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Donor Information</h3>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900 text-lg">{donorName}</h4>
+                  {donorContact && (
+                    <p className="text-gray-600 text-sm mt-1">{donorContact}</p>
+                  )}
+                  <p className="text-emerald-600 text-sm font-medium mt-2">
+                    Verified Food Donor
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
               <h3 className="font-semibold text-gray-900 mb-4">
                 Quick Actions
@@ -342,7 +400,7 @@ export default function FoodListingDetails() {
                     {listing.foodType || "Food Donation"}
                   </h1>
                   <p className="text-lg text-gray-600">
-                    from {listing.donorName || "Anonymous Donor"}
+                    from {donorName}
                   </p>
                 </div>
                 {daysUntilExpiry !== null && (
@@ -577,7 +635,7 @@ export default function FoodListingDetails() {
                   Request Food
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Send a request to the donor
+                  Send a request to {donorName}
                 </p>
               </div>
             </div>
@@ -589,7 +647,7 @@ export default function FoodListingDetails() {
               <textarea
                 value={requestMessage}
                 onChange={(e) => setRequestMessage(e.target.value)}
-                placeholder="Add a personal message to the donor..."
+                placeholder={`Add a personal message to ${donorName}...`}
                 rows="4"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 bg-white/50 resize-none"
               />
