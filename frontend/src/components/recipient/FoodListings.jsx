@@ -24,12 +24,32 @@ const FoodListings = () => {
   useEffect(() => {
     applyFilters();
   }, [donations, filters]);
+  const isDonationExpired = (donation) => {
+    if (!donation.expiryDate) return false;
+    
+    const expiryDate = new Date(donation.expiryDate);
+    const now = new Date();
+  
+    return expiryDate < now;
+  };
+
+  const getActualStatus = (donation) => {
+    if (isDonationExpired(donation)) {
+      return 'expired';
+    }
+    return donation.status;
+  };
 
   const loadDonations = async () => {
     try {
       setLoading(true);
       const response = await donationAPI.getAll();
-      setDonations(response.data || []); 
+      
+      if (response.data) {
+        const allDonations = response.data;
+        console.log("All donations:", allDonations);
+        setDonations(allDonations);
+      }
     } catch (error) {
       console.error('Error loading donations:', error);
       setDonations([]); 
@@ -41,7 +61,6 @@ const FoodListings = () => {
 
   const applyFilters = () => {
     let result = [...donations];
-    
     if (filters.search) {
       result = result.filter(donation => 
         donation.foodType?.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -49,13 +68,11 @@ const FoodListings = () => {
         donation.pickupLocation?.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
-    
     if (filters.foodType) {
       result = result.filter(donation => 
         donation.foodType?.toLowerCase().includes(filters.foodType.toLowerCase())
       );
     }
-    
     if (filters.expiry !== 'all') {
       const today = new Date();
       result = result.filter(donation => {
@@ -69,9 +86,11 @@ const FoodListings = () => {
           case 'tomorrow':
             return diffDays === 1;
           case 'week':
-            return diffDays <= 7;
+            return diffDays <= 7 && diffDays >= 0;
           case 'month':
-            return diffDays <= 30;
+            return diffDays <= 30 && diffDays >= 0;
+          case 'expired':
+            return diffDays < 0;
           default:
             return true;
         }
@@ -109,19 +128,22 @@ const FoodListings = () => {
   };
   const stats = {
     totalDonations: donations.length,
-    availableDonations: filteredDonations.length,
+    availableDonations: donations.filter(d => getActualStatus(d) === 'available').length,
+    expiredDonations: donations.filter(d => getActualStatus(d) === 'expired').length,
+    reservedDonations: donations.filter(d => getActualStatus(d) === 'reserved').length,
     expiringToday: donations.filter(d => {
       if (!d.expiryDate) return false;
       const today = new Date();
       const expiry = new Date(d.expiryDate);
-      return Math.ceil((expiry - today) / (1000 * 60 * 60 * 24)) === 0;
+      const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+      return diffDays === 0 && !isDonationExpired(d);
     }).length,
     expiringThisWeek: donations.filter(d => {
       if (!d.expiryDate) return false;
       const today = new Date();
       const expiry = new Date(d.expiryDate);
       const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-      return diffDays > 0 && diffDays <= 7;
+      return diffDays > 0 && diffDays <= 7 && !isDonationExpired(d);
     }).length,
     totalQuantity: donations.reduce((sum, d) => sum + (parseInt(d.quantity) || 0), 0),
     uniqueDonors: new Set(donations.map(d => d.donor?.id)).size
@@ -149,6 +171,30 @@ const FoodListings = () => {
     if (days === 0) return 'Expires today';
     if (days === 1) return '1 day left';
     return `${days} days left`;
+  };
+
+  const getStatusColor = (donation) => {
+    const actualStatus = getActualStatus(donation);
+    
+    switch (actualStatus) {
+      case 'available': return 'text-green-600 bg-green-50 border-green-200';
+      case 'expired': return 'text-red-600 bg-red-50 border-red-200';
+      case 'reserved': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'claimed': return 'text-blue-600 bg-blue-50 border-blue-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getStatusText = (donation) => {
+    const actualStatus = getActualStatus(donation);
+    
+    switch (actualStatus) {
+      case 'available': return 'Available';
+      case 'expired': return 'Expired';
+      case 'reserved': return 'Reserved';
+      case 'claimed': return 'Claimed';
+      default: return 'Unknown';
+    }
   };
 
   const foodTypeOptions = [...new Set(donations.map(d => d.foodType).filter(Boolean))].slice(0, 10);
@@ -210,7 +256,7 @@ const FoodListings = () => {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
@@ -234,6 +280,20 @@ const FoodListings = () => {
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                   <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/60 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Expired</p>
+                  <p className="text-2xl font-bold text-red-600 mt-1">{stats.expiredDonations}</p>
+                </div>
+                <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
               </div>
@@ -268,7 +328,7 @@ const FoodListings = () => {
             </div>
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Search Donations
@@ -312,12 +372,29 @@ const FoodListings = () => {
                   <option value="tomorrow">Tomorrow</option>
                   <option value="week">Within Week</option>
                   <option value="month">Within Month</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status
+                </label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({...filters, status: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 bg-white/50"
+                >
+                  <option value="all">All Status</option>
+                  <option value="available">Available</option>
+                  <option value="expired">Expired</option>
+                  <option value="reserved">Reserved</option>
                 </select>
               </div>
               
               <div className="flex items-end">
                 <button
-                  onClick={() => setFilters({ search: '', foodType: '', distance: 'all', expiry: 'all' })}
+                  onClick={() => setFilters({ search: '', foodType: '', distance: 'all', expiry: 'all', status: 'all' })}
                   className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
                 >
                   Clear Filters
@@ -326,6 +403,7 @@ const FoodListings = () => {
             </div>
           </div>
         </div>
+
         {filteredDonations.length === 0 ? (
           <div className="text-center py-16 bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-dashed border-gray-300">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -334,16 +412,16 @@ const FoodListings = () => {
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              {filters.search || filters.foodType || filters.expiry !== 'all' ? "No Donations Found" : "No Donations Available"}
+              {filters.search || filters.foodType || filters.expiry !== 'all' || filters.status !== 'all' ? "No Donations Found" : "No Donations Available"}
             </h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              {filters.search || filters.foodType || filters.expiry !== 'all' 
+              {filters.search || filters.foodType || filters.expiry !== 'all' || filters.status !== 'all' 
                 ? "Try adjusting your search criteria or filters to find what you're looking for."
                 : "Check back later for new food donations from your local community."}
             </p>
-            {(filters.search || filters.foodType || filters.expiry !== 'all') && (
+            {(filters.search || filters.foodType || filters.expiry !== 'all' || filters.status !== 'all') && (
               <button
-                onClick={() => setFilters({ search: '', foodType: '', distance: 'all', expiry: 'all' })}
+                onClick={() => setFilters({ search: '', foodType: '', distance: 'all', expiry: 'all', status: 'all' })}
                 className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 Show All Donations
@@ -354,23 +432,39 @@ const FoodListings = () => {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                Available Donations ({filteredDonations.length})
+                Food Donations ({filteredDonations.length})
               </h2>
               <div className="text-sm text-gray-600">
-                Sorted by: <span className="font-medium">Newest First</span>
+                Showing: <span className="font-medium">All donations</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredDonations.map(donation => {
                 const daysUntilExpiry = getDaysUntilExpiry(donation.expiryDate);
-                const isExpired = daysUntilExpiry < 0;
+                const isExpired = isDonationExpired(donation);
+                const actualStatus = getActualStatus(donation);
 
                 return (
-                  <div key={donation._id} className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
-                    <div className="p-6 border-b border-gray-100">
+                  <div key={donation._id} className={`bg-white/80 backdrop-blur-sm rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group ${
+                    isExpired ? 'border-red-200/60 opacity-80' : 'border-gray-200/60'
+                  }`}>
+                    <div className={`px-4 py-2 border-b ${getStatusColor(donation)}`}>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-sm">{getStatusText(donation)}</span>
+                        {isExpired && (
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-6">
                       <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-lg text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
+                        <h3 className={`font-semibold text-lg line-clamp-1 ${
+                          isExpired ? 'text-gray-500' : 'text-gray-900 group-hover:text-emerald-600 transition-colors'
+                        }`}>
                           {donation.foodType || 'Food Donation'}
                         </h3>
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getExpiryColor(daysUntilExpiry)}`}>
@@ -378,56 +472,68 @@ const FoodListings = () => {
                         </span>
                       </div>
                       
-                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+                      <p className={`text-sm leading-relaxed line-clamp-2 ${
+                        isExpired ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
                         {donation.description || 'No description available'}
                       </p>
                     </div>
 
-                    <div className="p-6">
+                    <div className="p-6 pt-0">
                       <div className="space-y-3 mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            isExpired ? 'bg-gray-100' : 'bg-blue-100'
+                          }`}>
+                            <svg className={`w-4 h-4 ${isExpired ? 'text-gray-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">Quantity</div>
-                            <div className="text-sm text-gray-600">{donation.quantity || 'Not specified'}</div>
+                            <div className={`text-sm font-medium ${isExpired ? 'text-gray-500' : 'text-gray-900'}`}>Quantity</div>
+                            <div className={`text-sm ${isExpired ? 'text-gray-400' : 'text-gray-600'}`}>{donation.quantity || 'Not specified'}</div>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            isExpired ? 'bg-gray-100' : 'bg-emerald-100'
+                          }`}>
+                            <svg className={`w-4 h-4 ${isExpired ? 'text-gray-400' : 'text-emerald-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">Pickup Location</div>
-                            <div className="text-sm text-gray-600 line-clamp-1">{donation.pickupLocation || 'Location not specified'}</div>
+                            <div className={`text-sm font-medium ${isExpired ? 'text-gray-500' : 'text-gray-900'}`}>Pickup Location</div>
+                            <div className={`text-sm line-clamp-1 ${isExpired ? 'text-gray-400' : 'text-gray-600'}`}>{donation.pickupLocation || 'Location not specified'}</div>
                           </div>
                         </div>
 
                         {donation.donor && (
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              isExpired ? 'bg-gray-100' : 'bg-amber-100'
+                            }`}>
+                              <svg className={`w-4 h-4 ${isExpired ? 'text-gray-400' : 'text-amber-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900">Donated By</div>
-                              <div className="text-sm text-gray-600">{donation.donor.name || 'Anonymous'}</div>
+                              <div className={`text-sm font-medium ${isExpired ? 'text-gray-500' : 'text-gray-900'}`}>Donated By</div>
+                              <div className={`text-sm ${isExpired ? 'text-gray-400' : 'text-gray-600'}`}>{donation.donor.name || 'Anonymous'}</div>
                             </div>
                           </div>
                         )}
                       </div>
 
                       {donation.allergens && (
-                        <div className="mb-4 p-3 bg-red-50 rounded-lg border border-red-200">
-                          <div className="flex items-center gap-2 text-red-800 text-sm">
+                        <div className={`mb-4 p-3 rounded-lg border ${
+                          isExpired ? 'bg-gray-50 border-gray-200' : 'bg-red-50 border-red-200'
+                        }`}>
+                          <div className={`flex items-center gap-2 text-sm ${
+                            isExpired ? 'text-gray-500' : 'text-red-800'
+                          }`}>
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
@@ -438,9 +544,9 @@ const FoodListings = () => {
 
                       <button
                         onClick={() => handleRequest(donation._id)}
-                        disabled={requestLoading === donation._id || isExpired || !user}
+                        disabled={requestLoading === donation._id || isExpired || !user || actualStatus !== 'available'}
                         className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                          isExpired 
+                          isExpired || actualStatus !== 'available'
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
                             : !user
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
@@ -454,6 +560,8 @@ const FoodListings = () => {
                           </>
                         ) : isExpired ? (
                           'Expired'
+                        ) : actualStatus !== 'available' ? (
+                          getStatusText(donation)
                         ) : !user ? (
                           'Login to Request'
                         ) : (
@@ -466,11 +574,17 @@ const FoodListings = () => {
                         )}
                       </button>
 
-                      {!user && (
+                      {!user && actualStatus === 'available' && (
                         <p className="text-xs text-gray-500 text-center mt-2">
                           <Link to="/login" className="text-emerald-600 hover:text-emerald-700 underline">
                             Sign in
                           </Link> to request this donation
+                        </p>
+                      )}
+
+                      {isExpired && (
+                        <p className="text-xs text-red-600 text-center mt-2">
+                          This donation has expired and cannot be requested
                         </p>
                       )}
                     </div>
