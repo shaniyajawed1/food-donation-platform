@@ -28,7 +28,6 @@ const expiredFoodIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Reserved donation icon (yellow/orange)
 const reservedFoodIcon = new L.Icon({
   iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyLjUgNDFDMTkuNDA0IDQxIDI1IDMxLjgyNzkgMjUgMjAuNUMyNSA5LjE3MjEgMTkuNDA0IDAgMTIuNSAwQzUuNTk1OTcgMCAwIDkuMTcyMSAwIDIwLjVDMCAzMS44Mjc5IDUuNTk1OTcgNDEgMTIuNSA0MVoiIGZpbGw9IiNGNTk1MTAiLz4KPHBhdGggZD0iTTEyLjUgMzZDMjEuMDU1OSAzNiAyOCAyOC4wNTU5IDI4IDE5LjVDMjggMTAuOTQ0MSAyMS4wNTU5IDQgMTIuNSA0QzMuOTQ0MDYgNCAwIDEwLjk0NDEgMCAxOS41QzAgMjguMDU1OSAzLjk0NDA2IDM2IDEyLjUgMzZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTYuNSAxNS41QzE2LjUgMTcuMTU2OSAxNC42NTY5IDE5IDEzIDE5QzExLjM0MzEgMTkgOS41IDE3LjE1NjkgOS41IDE1LjVDOS41IDEzLjg0MzEgMTEuMzQzMSAxMiAxMyAxMkMxNC42NTY5IDEyIDE2LjUgMTMuODQzMSAxNi41IDE1LjVaIiBmaWxsPSIjRjU5NTEwIi8+CjxwYXRoIGQ9Ik0xMCAyMkMxMCAyMiAxMiAyNSAxMyAyNUMxNCAyNSAxNiAyMiAxNiAyMkMxNiAyMiAxOCAyNCAxOCAyNkMxOCAyOCAxNi41IDMwIDEzIDMwQzkuNSAzMCA4IDI4IDggMjZDOCAyNCAxMCAyMiAxMCAyMloiIGZpbGw9IiNGNTk1MTAiLz4KPC9zdmc+',
   iconSize: [25, 41],
@@ -51,7 +50,26 @@ export default function DonationMap() {
   const [error, setError] = useState("");
   const [userLocation, setUserLocation] = useState(null);
   const [geocodingProgress, setGeocodingProgress] = useState(0);
+  const [mapHeight, setMapHeight] = useState("400px");
   const defaultCenter = [28.6139, 77.2090]; 
+
+  // Update map height based on screen size
+  useEffect(() => {
+    const updateMapHeight = () => {
+      if (window.innerWidth < 768) {
+        setMapHeight("300px");
+      } else if (window.innerWidth < 1024) {
+        setMapHeight("450px");
+      } else {
+        setMapHeight("550px");
+      }
+    };
+
+    updateMapHeight();
+    window.addEventListener('resize', updateMapHeight);
+    
+    return () => window.removeEventListener('resize', updateMapHeight);
+  }, []);
 
   const isDonationExpired = (donation) => {
     if (!donation.expiryDate) return false;
@@ -86,7 +104,6 @@ export default function DonationMap() {
     }
   };
 
-  // Get status color for display
   const getStatusColor = (donation) => {
     const actualStatus = getActualStatus(donation);
     
@@ -245,7 +262,6 @@ export default function DonationMap() {
     ];
   };
 
-  // Count donations by actual status
   const getDonationCounts = () => {
     const counts = {
       available: 0,
@@ -265,13 +281,13 @@ export default function DonationMap() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="text-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading donation map...</p>
             {geocodingProgress > 0 && (
-              <div className="mt-4">
+              <div className="mt-4 max-w-md mx-auto">
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
@@ -292,21 +308,23 @@ export default function DonationMap() {
   const donationCounts = getDonationCounts();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-emerald-700 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 pt-4 pb-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        {/* Header Section */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-emerald-700 bg-clip-text text-transparent px-2">
             Find Food Near You
           </h1>
-          <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">
             Explore available food donations on the map. Click on markers to see details.
           </p>
         </div>
 
+        {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
+          <div className="bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl p-4 mb-6 mx-2">
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-red-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
@@ -317,47 +335,50 @@ export default function DonationMap() {
           </div>
         )}
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-gray-600">{donationCounts.total}</div>
-              <div className="text-sm text-gray-600">Total Donations</div>
+        {/* Stats Cards */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/60 p-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 text-center">
+            <div className="p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600">{donationCounts.total}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Total</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">
+            <div className="p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
                 {donationCounts.available}
               </div>
-              <div className="text-sm text-gray-600">Available</div>
+              <div className="text-xs sm:text-sm text-gray-600">Available</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-red-600">
+            <div className="p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
                 {donationCounts.expired}
               </div>
-              <div className="text-sm text-gray-600">Expired</div>
+              <div className="text-xs sm:text-sm text-gray-600">Expired</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-600">
                 {donationCounts.reserved}
               </div>
-              <div className="text-sm text-gray-600">Reserved</div>
+              <div className="text-xs sm:text-sm text-gray-600">Reserved</div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="p-2 sm:p-3">
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">
                 {donationCounts.claimed}
               </div>
-              <div className="text-sm text-gray-600">Claimed</div>
+              <div className="text-xs sm:text-sm text-gray-600">Claimed</div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden">
-          <div className="h-96 md:h-[500px] lg:h-[600px]">
+        {/* Map Container */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200/80 overflow-hidden mb-6 mx-2">
+          <div style={{ height: mapHeight }} className="w-full relative">
             {userLocation && (
               <MapContainer
                 center={userLocation}
                 zoom={12}
                 style={{ height: '100%', width: '100%' }}
                 scrollWheelZoom={true}
+                className="rounded-xl sm:rounded-2xl"
               >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -378,12 +399,12 @@ export default function DonationMap() {
                     icon={getDonationIcon(donation)}
                   >
                     <Popup>
-                      <div className="min-w-[250px]">
-                        <h3 className="font-bold text-gray-900 text-lg mb-2">
+                      <div className="min-w-[200px] sm:min-w-[250px]">
+                        <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-2">
                           {donation.foodType}
                         </h3>
                         
-                        <div className="space-y-2 text-sm">
+                        <div className="space-y-2 text-xs sm:text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Quantity:</span>
                             <span className="font-semibold">{donation.quantity}</span>
@@ -408,7 +429,7 @@ export default function DonationMap() {
 
                           <div>
                             <span className="text-gray-600 block mb-1">Pickup Location:</span>
-                            <span className="font-medium text-sm">
+                            <span className="font-medium text-xs sm:text-sm">
                               {donation.originalAddress || donation.pickupLocation}
                             </span>
                             {donation.geocodeFailed && (
@@ -421,16 +442,16 @@ export default function DonationMap() {
                           {donation.description && (
                             <div>
                               <span className="text-gray-600 block mb-1">Description:</span>
-                              <span className="text-sm">{donation.description}</span>
+                              <span className="text-xs sm:text-sm">{donation.description}</span>
                             </div>
                           )}
                         </div>
 
                         {getActualStatus(donation) === 'available' && (
-                          <div className="mt-4">
+                          <div className="mt-3 sm:mt-4">
                             <Link
                               to={`/recipient/food-listings/${donation._id}`}
-                              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-lg font-semibold transition-colors duration-200 text-sm block text-center"
+                              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-3 sm:px-4 rounded-lg font-semibold transition-colors duration-200 text-xs sm:text-sm block text-center"
                             >
                               View Details & Claim
                             </Link>
@@ -438,8 +459,8 @@ export default function DonationMap() {
                         )}
 
                         {getActualStatus(donation) === 'expired' && (
-                          <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-700 text-sm text-center font-medium">
+                          <div className="mt-3 sm:mt-4 p-2 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-700 text-xs sm:text-sm text-center font-medium">
                               This donation has expired
                             </p>
                           </div>
@@ -453,36 +474,38 @@ export default function DonationMap() {
           </div>
         </div>
 
-        <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Map Legend</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        {/* Legend */}
+        <div className="mt-4 sm:mt-6 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-sm border border-gray-200/60 p-4 mx-2">
+          <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">Map Legend</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-emerald-500 rounded-full flex-shrink-0"></div>
               <span>Your Location</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-600 rounded-full"></div>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded-full flex-shrink-0"></div>
               <span>Available Food</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-600 rounded-full flex-shrink-0"></div>
               <span>Expired Food</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-full flex-shrink-0"></div>
               <span>Reserved Food</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full flex-shrink-0"></div>
               <span>Claimed Food</span>
             </div>
           </div>
         </div>
 
-        <div className="text-center mt-8">
+        {/* Refresh Button */}
+        <div className="text-center mt-6 sm:mt-8 px-2">
           <button
             onClick={fetchDonations}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md text-sm sm:text-base"
           >
             Refresh Map
           </button>
