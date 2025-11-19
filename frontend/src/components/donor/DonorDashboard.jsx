@@ -19,8 +19,10 @@ export default function DonorDashboard() {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user?.id) {
+      fetchDashboardData();
+    }
+  }, [user?.id]);
 
   // Check if donation is expired
   const isDonationExpired = (donation) => {

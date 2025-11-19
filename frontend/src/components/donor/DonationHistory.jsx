@@ -15,10 +15,10 @@ export default function DonationHistory({ onUpdate }) {
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       loadDonations();
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     applySortingAndFiltering();
