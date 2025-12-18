@@ -1,0 +1,10 @@
+{
+    "build": {
+      "workdir": "backend",
+      "command": "npm ci"
+    },
+    "deploy": {
+      "workdir": "backend",
+      "start": "npm start"
+    }
+  }

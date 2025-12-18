@@ -9,9 +9,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
-  const baseNavItems = [
-    { path: "/", label: "Home", icon: <Icons.Home /> },
-  ];
+  const baseNavItems = [{ path: "/", label: "Home", icon: <Icons.Home /> }];
 
   const getUserSpecificNavItems = () => {
     if (!isAuthenticated) {
@@ -21,19 +19,39 @@ export default function Header() {
       ];
     }
 
-    if (user?.userType === 'donor') {
+    if (user?.userType === "donor") {
       return [
-        { path: "/donor/dashboard", label: "Dashboard", icon: <Icons.Dashboard /> },
-        { path: "/donor/donations", label: "My Donations", icon: <Icons.Donate /> },
+        {
+          path: "/donor/dashboard",
+          label: "Dashboard",
+          icon: <Icons.Dashboard />,
+        },
+        {
+          path: "/donor/donations",
+          label: "My Donations",
+          icon: <Icons.Donate />,
+        },
         { path: "/donor/impact", label: "My Impact", icon: <Icons.Impact /> },
       ];
     }
 
-    if (user?.userType === 'recipient') {
+    if (user?.userType === "recipient") {
       return [
-        { path: "/recipient/dashboard", label: "Dashboard", icon: <Icons.Dashboard /> },
-        { path: "/recipient/food-listings", label: "Find Food", icon: <Icons.Find /> },
-        { path: "/recipient/requests", label: "My Requests", icon: <Icons.Requests /> },
+        {
+          path: "/recipient/dashboard",
+          label: "Dashboard",
+          icon: <Icons.Dashboard />,
+        },
+        {
+          path: "/recipient/food-listings",
+          label: "Find Food",
+          icon: <Icons.Find />,
+        },
+        {
+          path: "/recipient/requests",
+          label: "My Requests",
+          icon: <Icons.Requests />,
+        },
       ];
     }
 
@@ -50,14 +68,12 @@ export default function Header() {
 
   const handleConfirmLogout = async () => {
     try {
-      await logout();
       setShowLogoutModal(false);
       setIsMobileMenuOpen(false);
-      setTimeout(() => {
-        navigate("/");
-      }, 100);
+      navigate("/");
+      await logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
@@ -107,11 +123,13 @@ export default function Header() {
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 bg-gradient-to-br rounded-full flex items-center justify-center text-white text-sm font-medium shadow-sm ${
-                      user?.userType === 'donor' 
-                        ? 'from-amber-500 to-amber-600' 
-                        : 'from-blue-500 to-blue-600'
-                    }`}>
+                    <div
+                      className={`w-8 h-8 bg-gradient-to-br rounded-full flex items-center justify-center text-white text-sm font-medium shadow-sm ${
+                        user?.userType === "donor"
+                          ? "from-amber-500 to-amber-600"
+                          : "from-blue-500 to-blue-600"
+                      }`}
+                    >
                       {user?.name?.charAt(0)?.toUpperCase()}
                     </div>
                     <div className="flex flex-col">
@@ -196,11 +214,13 @@ export default function Header() {
                   {isAuthenticated ? (
                     <div className="space-y-3">
                       <div className="flex items-center space-x-3 px-4 py-3">
-                        <div className={`w-10 h-10 bg-gradient-to-br rounded-full flex items-center justify-center text-white font-medium shadow-sm ${
-                          user?.userType === 'donor' 
-                            ? 'from-amber-500 to-amber-600' 
-                            : 'from-blue-500 to-blue-600'
-                        }`}>
+                        <div
+                          className={`w-10 h-10 bg-gradient-to-br rounded-full flex items-center justify-center text-white font-medium shadow-sm ${
+                            user?.userType === "donor"
+                              ? "from-amber-500 to-amber-600"
+                              : "from-blue-500 to-blue-600"
+                          }`}
+                        >
                           {user?.name?.charAt(0)?.toUpperCase()}
                         </div>
                         <div className="flex-1">
@@ -265,7 +285,7 @@ export default function Header() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={handleCancelLogout}

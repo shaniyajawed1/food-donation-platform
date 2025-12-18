@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { donationAPI, requestAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import DonorDetailsModal from "../../components/DonorDetailsModal";
 import { Icons } from "../Icons.jsx";
 import toast from "react-hot-toast";
 
@@ -9,10 +10,11 @@ export default function FoodListingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [requestLoading, setRequestLoading] = useState(false);
+  const [showDonorModal, setShowDonorModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
 
@@ -24,12 +26,12 @@ export default function FoodListingDetails() {
     try {
       setLoading(true);
       const response = await donationAPI.getAll();
-      
+
       if (response.data) {
-        const foundListing = response.data.find(item => 
-          item._id === id || item.id === id
+        const foundListing = response.data.find(
+          (item) => item._id === id || item.id === id
         );
-        
+
         if (foundListing) {
           setListing(foundListing);
         } else {
@@ -60,11 +62,14 @@ export default function FoodListingDetails() {
       const requestData = {
         donationId: id,
         recipientId: user.id,
-        message: requestMessage || "I would like to request this food donation."
+        message:
+          requestMessage || "I would like to request this food donation.",
       };
-      
+
       await requestAPI.create(requestData);
-      toast.success("Food request sent successfully! The donor will review your request.");
+      toast.success(
+        "Food request sent successfully! The donor will review your request."
+      );
       setShowRequestModal(false);
       setRequestMessage("");
       navigate("/recipient/requests");
@@ -101,19 +106,54 @@ export default function FoodListingDetails() {
   };
 
   const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return new Date(dateString).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
+  };
+
+  // Get donor name from the listing data
+  const getDonorName = () => {
+    if (!listing) return "Anonymous Donor";
+
+    // Check different possible donor name fields
+    if (listing.donor?.name) {
+      return listing.donor.name;
+    }
+    if (listing.donorName) {
+      return listing.donorName;
+    }
+    if (listing.donor?.username) {
+      return listing.donor.username;
+    }
+    if (listing.donor?.email) {
+      return listing.donor.email.split("@")[0]; // Use part of email as fallback
+    }
+
+    return "Anonymous Donor";
+  };
+
+  // Get donor contact info if available
+  const getDonorContact = () => {
+    if (!listing) return null;
+
+    if (listing.donor?.email) {
+      return listing.donor.email;
+    }
+    if (listing.donor?.phone) {
+      return listing.donor.phone;
+    }
+
+    return null;
   };
 
   if (loading) {
@@ -123,7 +163,7 @@ export default function FoodListingDetails() {
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="h-96 bg-gray-200 rounded-2xl"></div>
               <div className="space-y-4">
@@ -146,8 +186,13 @@ export default function FoodListingDetails() {
           <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Icons.About className="w-12 h-12 text-red-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Listing Not Found</h1>
-          <p className="text-gray-600 mb-8">The food listing you're looking for doesn't exist or has been removed.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Listing Not Found
+          </h1>
+          <p className="text-gray-600 mb-8">
+            The food listing you're looking for doesn't exist or has been
+            removed.
+          </p>
           <Link
             to="/recipient/food-listings"
             className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200"
@@ -161,12 +206,17 @@ export default function FoodListingDetails() {
 
   const daysUntilExpiry = getDaysUntilExpiry(listing.expiryDate);
   const isExpired = daysUntilExpiry < 0;
+  const donorName = getDonorName();
+  const donorContact = getDonorContact();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-          <Link to="/recipient/food-listings" className="hover:text-emerald-600 transition-colors">
+          <Link
+            to="/recipient/food-listings"
+            className="hover:text-emerald-600 transition-colors"
+          >
             Food Listings
           </Link>
           <span>›</span>
@@ -176,44 +226,220 @@ export default function FoodListingDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div className="space-y-4">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
-              <div className="h-80 bg-gradient-to-br from-emerald-100 to-blue-100 flex items-center justify-center">
-                {listing.image ? (
-                  <img
-                    src={listing.image}
-                    alt={listing.donorName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Icons.Meals className="w-20 h-20 text-emerald-400" />
+              <div className="space-y-4">
+                {/* Main Image */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 overflow-hidden">
+                  <div className="h-80 bg-gradient-to-br from-emerald-100 to-blue-100 flex items-center justify-center overflow-hidden">
+                    {listing.images && listing.images.length > 0 ? (
+                      <img
+                        src={listing.images[0]}
+                        alt={listing.foodType || "Food donation"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(
+                            "Image failed to load:",
+                            listing.images[0]
+                          );
+                          e.target.style.display = "none";
+                          const fallback = document.createElement("div");
+                          fallback.className =
+                            "w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-blue-100";
+                          fallback.innerHTML = `
+                            <div class="text-center">
+                              <svg class="w-16 h-16 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                              </svg>
+                              <p class="text-emerald-500 font-medium mt-2">Food Image</p>
+                            </div>
+                          `;
+                          e.target.parentElement.appendChild(fallback);
+                        }}
+                      />
+                    ) : listing.image ? (
+                      <img
+                        src={listing.image}
+                        alt={listing.foodType || "Food donation"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <Icons.Meals className="w-20 h-20 text-emerald-400 mx-auto mb-4" />
+                        <p className="text-emerald-500 font-medium">
+                          No Image Available
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Image Thumbnails (if multiple images exist) */}
+                {listing.images && listing.images.length > 1 && (
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">
+                      More Images ({listing.images.length})
+                    </h4>
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {listing.images.map((image, index) => (
+                        <div
+                          key={index}
+                          className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg border border-gray-300 overflow-hidden cursor-pointer hover:border-emerald-400 transition-colors"
+                          onClick={() => {
+                            // Simple image switcher - in a real app you might want a proper gallery
+                            const mainImg =
+                              document.querySelector(".main-food-image");
+                            if (mainImg) {
+                              mainImg.src = image;
+                            }
+                          }}
+                        >
+                          <img
+                            src={image}
+                            alt={`${listing.foodType} - Image ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                              e.target.parentElement.innerHTML = `
+                                <div class="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                  </svg>
+                                </div>
+                              `;
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
+
+            {/* Donor Information Card */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">
+                Donor Information
+              </h3>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-8 h-8 text-emerald-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900 text-lg">
+                    {donorName}
+                  </h4>
+                  {donorContact && (
+                    <p className="text-gray-600 text-sm mt-1">{donorContact}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg
+                          key={star}
+                          className={`w-4 h-4 ${
+                            star <= 4
+                              ? "text-amber-400 fill-current"
+                              : "text-gray-300"
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      4.7 (28 reviews)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowDonorModal(true)}
+                className="w-full py-2.5 px-4 border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                View Donor Details
+              </button>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">
+                Quick Actions
+              </h3>
               <div className="space-y-3">
                 <button
                   onClick={() => setShowRequestModal(true)}
                   disabled={isExpired || !user}
                   className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                    isExpired 
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                    isExpired
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : !user
-                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-sm hover:shadow-md transform hover:-translate-y-0.5'
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
-                  {isExpired ? 'Expired' : !user ? 'Login to Request' : 'Request This Food'}
+                  {isExpired
+                    ? "Expired"
+                    : !user
+                    ? "Login to Request"
+                    : "Request This Food"}
                 </button>
-                
+
                 <Link
                   to="/recipient/food-listings"
                   className="w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
                   </svg>
                   Back to Listings
                 </Link>
@@ -227,12 +453,14 @@ export default function FoodListingDetails() {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2">
                     {listing.foodType || "Food Donation"}
                   </h1>
-                  <p className="text-lg text-gray-600">
-                    from {listing.donorName || "Anonymous Donor"}
-                  </p>
+                  <p className="text-lg text-gray-600">from {donorName}</p>
                 </div>
                 {daysUntilExpiry !== null && (
-                  <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${getExpiryColor(daysUntilExpiry)}`}>
+                  <span
+                    className={`px-4 py-2 rounded-full text-sm font-semibold border ${getExpiryColor(
+                      daysUntilExpiry
+                    )}`}
+                  >
                     {getExpiryText(daysUntilExpiry)}
                   </span>
                 )}
@@ -268,25 +496,51 @@ export default function FoodListingDetails() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-5 h-5 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                     </div>
                     <div>
                       <div className="font-medium text-gray-900">Quantity</div>
-                      <div className="text-gray-600">{listing.quantity || "Not specified"}</div>
+                      <div className="text-gray-600">
+                        {listing.quantity || "Not specified"}
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <svg
+                        className="w-5 h-5 text-emerald-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
                       </svg>
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">Pickup Location</div>
-                      <div className="text-gray-600">{listing.pickupLocation || "Location not specified"}</div>
+                      <div className="font-medium text-gray-900">
+                        Pickup Location
+                      </div>
+                      <div className="text-gray-600">
+                        {listing.pickupLocation || "Location not specified"}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -295,13 +549,27 @@ export default function FoodListingDetails() {
                   {listing.pickupTime && (
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-5 h-5 text-amber-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">Pickup Time</div>
-                        <div className="text-gray-600">{formatTime(listing.pickupTime)}</div>
+                        <div className="font-medium text-gray-900">
+                          Pickup Time
+                        </div>
+                        <div className="text-gray-600">
+                          {formatTime(listing.pickupTime)}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -309,13 +577,27 @@ export default function FoodListingDetails() {
                   {listing.expiryDate && (
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-5 h-5 text-purple-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">Expiry Date</div>
-                        <div className="text-gray-600">{formatDate(listing.expiryDate)}</div>
+                        <div className="font-medium text-gray-900">
+                          Expiry Date
+                        </div>
+                        <div className="text-gray-600">
+                          {formatDate(listing.expiryDate)}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -324,29 +606,55 @@ export default function FoodListingDetails() {
             </div>
             {(listing.allergens || listing.specialInstructions) && (
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/60 p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Important Information</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  Important Information
+                </h3>
                 <div className="space-y-4">
                   {listing.allergens && (
                     <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                       <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
                         </svg>
                         Contains Allergens
                       </div>
-                      <p className="text-red-700 text-sm">{listing.allergens}</p>
+                      <p className="text-red-700 text-sm">
+                        {listing.allergens}
+                      </p>
                     </div>
                   )}
 
                   {listing.specialInstructions && (
                     <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="flex items-center gap-2 text-blue-800 font-medium mb-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         Special Instructions
                       </div>
-                      <p className="text-blue-700 text-sm">{listing.specialInstructions}</p>
+                      <p className="text-blue-700 text-sm">
+                        {listing.specialInstructions}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -360,13 +668,27 @@ export default function FoodListingDetails() {
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all duration-300 scale-100">
             <div className="flex items-center space-x-3 mb-4">
               <div className="flex items-center justify-center w-10 h-10 bg-emerald-100 rounded-xl">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-5 h-5 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Request Food</h3>
-                <p className="text-sm text-gray-600">Send a request to the donor</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Request Food
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Send a request to {donorName}
+                </p>
               </div>
             </div>
 
@@ -377,7 +699,7 @@ export default function FoodListingDetails() {
               <textarea
                 value={requestMessage}
                 onChange={(e) => setRequestMessage(e.target.value)}
-                placeholder="Add a personal message to the donor..."
+                placeholder={`Add a personal message to ${donorName}...`}
                 rows="4"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 bg-white/50 resize-none"
               />
@@ -411,6 +733,19 @@ export default function FoodListingDetails() {
           </div>
         </div>
       )}
+      <DonorDetailsModal
+        isOpen={showDonorModal}
+        onClose={() => setShowDonorModal(false)}
+        donor={{
+          name: donorName,
+          email: donorContact,
+          phone: listing.donor?.phone,
+          joinDate: listing.donor?.createdAt,
+          totalDonations: listing.donor?.totalDonations,
+          rating: 4.7,
+          reviews: 28,
+        }}
+      />
     </div>
   );
 }

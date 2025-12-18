@@ -10,6 +10,7 @@ export default function DonorDashboard() {
     totalDonations: 0,
     activeDonations: 0,
     completedDonations: 0,
+    expiredDonations: 0,
     totalImpact: 0
   });
   const [recentDonations, setRecentDonations] = useState([]);
@@ -18,8 +19,37 @@ export default function DonorDashboard() {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user?.id) {
+      fetchDashboardData();
+    }
+  }, [user?.id]);
+
+  // Check if donation is expired
+  const isDonationExpired = (donation) => {
+    if (!donation.expiryDate) return false;
+    const today = new Date();
+    const expiry = new Date(donation.expiryDate);
+    // Reset time part to compare only dates
+    today.setHours(0, 0, 0, 0);
+    expiry.setHours(0, 0, 0, 0);
+    return expiry < today;
+  };
+
+  // Get actual status considering expiry
+  const getActualStatus = (donation) => {
+    // If donation is already expired, cancelled, or completed, return as is
+    if (donation.status === 'expired' || donation.status === 'cancelled' || donation.status === 'completed') {
+      return donation.status;
+    }
+    
+    // Check if donation is expired
+    if (isDonationExpired(donation)) {
+      return 'expired';
+    }
+    
+    // Otherwise return the original status
+    return donation.status;
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -52,12 +82,29 @@ export default function DonorDashboard() {
     console.log('Calculating stats from donations:', donations);
     
     const totalDonations = donations.length;
-    const activeDonations = donations.filter(d => d.status === 'available').length;
-    const completedDonations = donations.filter(d => d.status === 'completed').length;
     
+    // Use actual status for counting
+    const activeDonations = donations.filter(d => {
+      const actualStatus = getActualStatus(d);
+      return actualStatus === 'available';
+    }).length;
     
+    const completedDonations = donations.filter(d => {
+      const actualStatus = getActualStatus(d);
+      return actualStatus === 'completed';
+    }).length;
+    
+    const expiredDonations = donations.filter(d => {
+      const actualStatus = getActualStatus(d);
+      return actualStatus === 'expired';
+    }).length;
+    
+    // Calculate impact only from completed donations
     const totalImpact = donations
-      .filter(d => d.status === 'completed')
+      .filter(d => {
+        const actualStatus = getActualStatus(d);
+        return actualStatus === 'completed';
+      })
       .reduce((total, donation) => {
         const quantityMatch = donation.quantity.match(/\d+/);
         const quantity = quantityMatch ? parseInt(quantityMatch[0]) : 0;
@@ -68,6 +115,7 @@ export default function DonorDashboard() {
       totalDonations,
       activeDonations,
       completedDonations,
+      expiredDonations,
       totalImpact
     });
 
@@ -75,6 +123,7 @@ export default function DonorDashboard() {
       totalDonations,
       activeDonations,
       completedDonations,
+      expiredDonations,
       totalImpact
     });
   };
@@ -83,7 +132,14 @@ export default function DonorDashboard() {
     try {
       const response = await donationAPI.getMyDonations();
       const donations = response.data;
-      const recent = donations.slice(0, 3);
+      
+      // Enhance donations with actual status for display
+      const enhancedDonations = donations.map(donation => ({
+        ...donation,
+        actualStatus: getActualStatus(donation)
+      }));
+      
+      const recent = enhancedDonations.slice(0, 3);
       console.log('Recent donations:', recent);
       setRecentDonations(recent);
     } catch (error) {
@@ -93,11 +149,14 @@ export default function DonorDashboard() {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    const actualStatus = status.actualStatus || status;
+    
+    switch (actualStatus) {
       case 'available': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
       case 'claimed': return 'text-amber-600 bg-amber-50 border-amber-200';
       case 'completed': return 'text-blue-600 bg-blue-50 border-blue-200';
       case 'cancelled': return 'text-red-600 bg-red-50 border-red-200';
+      case 'expired': return 'text-gray-600 bg-gray-50 border-gray-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
@@ -223,7 +282,9 @@ export default function DonorDashboard() {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        
+        {/* Stats Grid - Added Expired Donations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl flex items-center justify-center text-white shadow-sm">
@@ -266,6 +327,21 @@ export default function DonorDashboard() {
               <p className="text-slate-600 text-sm font-light mb-1">Completed</p>
               <p className="text-2xl font-serif font-normal text-slate-900">{stats.completedDonations}</p>
               <p className="text-xs text-slate-500 mt-1">Successfully delivered</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl flex items-center justify-center text-white shadow-sm">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div>
+              <p className="text-slate-600 text-sm font-light mb-1">Expired</p>
+              <p className="text-2xl font-serif font-normal text-slate-900">{stats.expiredDonations}</p>
+              <p className="text-xs text-slate-500 mt-1">Past expiry date</p>
             </div>
           </div>
 
@@ -342,8 +418,8 @@ export default function DonorDashboard() {
                           <span className="font-medium text-slate-900 text-sm truncate">
                             {donation.foodType}
                           </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(donation.status)}`}>
-                            {donation.status}
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(donation)}`}>
+                            {donation.actualStatus || donation.status}
                           </span>
                         </div>
                         <div className="text-xs text-slate-500 mb-1">
